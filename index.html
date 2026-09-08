@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="htmlRoot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VELMORA | ملابس مصرية عصرية</title>
+<meta name="description" content="VELMORA — براند ملابس مصري: تيشيرتات، قمصان لينن، جينز، سويت بانتس. خامات تقيلة وشحن سريع.">
+<link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="announce" id="announce">شحن مجاني للطلبات فوق 1999 جنيه 🚚</div>
+
+<header class="header">
+  <div class="container header-in">
+    <button class="burger" id="burger" aria-label="menu">☰</button>
+    <a class="logo" href="#">VELMORA</a>
+    <nav class="nav" id="nav">
+      <a href="#home" data-en="Home" data-ar="الرئيسية">الرئيسية</a>
+      <a href="#collections" data-en="Collections" data-ar="المجموعات">المجموعات</a>
+      <a href="#best" data-en="Best Selling" data-ar="الأكثر مبيعاً">الأكثر مبيعاً</a>
+      <a href="#about" data-en="About" data-ar="عن البراند">عن البراند</a>
+      <a href="#contact" data-en="Contact" data-ar="تواصل معنا">تواصل معنا</a>
+    </nav>
+    <div class="actions">
+      <button class="lang-btn" id="langBtn">EN</button>
+      <button class="icon-btn" id="searchBtn" aria-label="search">🔍</button>
+      <button class="icon-btn cart-btn" id="cartBtn" aria-label="cart">🛒 <span id="cartCount">0</span></button>
+    </div>
+  </div>
+  <div class="search-bar" id="searchBar">
+    <input id="searchInput" type="text" data-en-ph="Search products..." data-ar-ph="دوّر على منتج..." placeholder="دوّر على منتج...">
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-bg"></div>
+  <div class="container hero-content">
+    <span class="pill" data-en="New Season 2026 — Egypt" data-ar="موسم جديد 2026 — مصر">موسم جديد 2026 — مصر</span>
+    <h1 data-en="Heavyweight essentials, made for Egypt." data-ar="أساسيات تقيلة، معمولة لمصر.">أساسيات تقيلة، معمولة لمصر.</h1>
+    <p data-en="T-shirts, linen shirts, wide-leg jeans & sweatpants. Clean cuts, honest prices in EGP." data-ar="تيشيرتات، قمصان لينن، جينز وايد ليج وسويت بانتس. قصّات نضيفة وأسعار واضحة بالجنيه.">تيشيرتات، قمصان لينن، جينز وايد ليج وسويت بانتس. قصّات نضيفة وأسعار واضحة بالجنيه.</p>
+    <div class="hero-cta">
+      <a href="#best" class="btn primary" data-en="Shop best sellers" data-ar="تسوّق الأكثر مبيعاً">تسوّق الأكثر مبيعاً</a>
+      <a href="#collections" class="btn ghost" data-en="Browse collections" data-ar="تصفّح المجموعات">تصفّح المجموعات</a>
+    </div>
+    <div class="hero-meta">
+      <div><b>350+ EGP</b><span data-en="starting prices" data-ar="أسعار البداية">أسعار البداية</span></div>
+      <div><b>1999+ EGP</b><span data-en="free shipping" data-ar="شحن مجاني">شحن مجاني</span></div>
+      <div><b>14 days</b><span data-en="easy exchange" data-ar="استبدال سهل">استبدال سهل</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- COLLECTIONS -->
+<section class="section" id="collections">
+  <div class="container">
+    <div class="sec-head">
+      <h2 data-en="Browse the Collection" data-ar="تصفّح المجموعة">تصفّح المجموعة</h2>
+      <a href="#best" class="link" data-en="Shop all →" data-ar="تسوّق الكل ←">تسوّق الكل ←</a>
+    </div>
+    <div class="grid collections" id="collectionsGrid"></div>
+  </div>
+</section>
+
+<!-- BEST SELLING -->
+<section class="section alt" id="best">
+  <div class="container">
+    <div class="sec-head">
+      <h2 data-en="Best Selling" data-ar="الأكثر مبيعاً">الأكثر مبيعاً</h2>
+      <div class="filters" id="filters">
+        <button class="chip active" data-f="all" data-en="All" data-ar="الكل">الكل</button>
+        <button class="chip" data-f="tshirt" data-en="T-shirts" data-ar="تيشيرتات">تيشيرتات</button>
+        <button class="chip" data-f="linen" data-en="Linen" data-ar="لينن">لينن</button>
+        <button class="chip" data-f="jeans" data-en="Jeans" data-ar="جينز">جينز</button>
+        <button class="chip" data-f="sweat" data-en="Sweatpants" data-ar="سويت بانتس">سويت بانتس</button>
+      </div>
+    </div>
+    <div class="grid products" id="productsGrid"></div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="section" id="about">
+  <div class="container about">
+    <div class="about-text">
+      <h2 data-en="Why VELMORA?" data-ar="ليه VELMORA؟">ليه VELMORA؟</h2>
+      <ul>
+        <li data-en="✔ Heavyweight cotton 220–260 GSM that keeps its shape" data-ar="✔ قطن تقيل 220–260 جرام يحافظ على شكله بعد الغسيل">✔ قطن تقيل 220–260 جرام يحافظ على شكله بعد الغسيل</li>
+        <li data-en="✔ Minimal designs you can wear daily" data-ar="✔ تصاميم بسيطة تتلبس كل يوم">✔ تصاميم بسيطة تتلبس كل يوم</li>
+        <li data-en="✔ Cash on delivery + fast shipping all over Egypt" data-ar="✔ دفع عند الاستلام وشحن سريع لكل المحافظات">✔ دفع عند الاستلام وشحن سريع لكل المحافظات</li>
+        <li data-en="✔ Easy 14-day size exchange" data-ar="✔ استبدال مقاس سهل خلال 14 يوم">✔ استبدال مقاس سهل خلال 14 يوم</li>
+      </ul>
+    </div>
+    <div class="about-card">
+      <h3>VELMORA</h3>
+      <p data-en="Inspired by clean Egyptian streetwear. Original designs, no copies." data-ar="مستوحى من الستريت وير المصري النضيف. تصاميم أصلية بدون نسخ.">مستوحى من الستريت وير المصري النضيف. تصاميم أصلية بدون نسخ.</p>
+      <div class="sizes"><span>S</span><span>M</span><span>L</span><span>XL</span><span>XXL</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="section alt" id="contact">
+  <div class="container contact">
+    <h2 data-en="Contact Us" data-ar="تواصل معنا">تواصل معنا</h2>
+    <p data-en="WhatsApp / Instagram / TikTok — we reply within hours." data-ar="واتساب / انستجرام / تيك توك — بنرد خلال ساعات.">واتساب / انستجرام / تيك توك — بنرد خلال ساعات.</p>
+    <div class="contact-row">
+      <a class="btn primary" href="https://wa.me/201000000000" target="_blank" rel="noopener">WhatsApp</a>
+      <a class="btn ghost" href="#" id="igBtn">Instagram</a>
+      <a class="btn ghost" href="#" id="ttBtn">TikTok</a>
+    </div>
+    <form class="news" id="newsForm">
+      <input required type="email" id="newsEmail" data-en-ph="Your email for offers" data-ar-ph="إيميلك عشان العروض" placeholder="إيميلك عشان العروض">
+      <button class="btn primary" type="submit" data-en="Subscribe" data-ar="اشترك">اشترك</button>
+    </form>
+    <p class="tiny" id="newsMsg"></p>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container foot-grid">
+    <div><b>VELMORA</b><p data-en="Egyptian essentials brand. Cairo, Egypt." data-ar="براند مصري للأساسيات. القاهرة، مصر.">براند مصري للأساسيات. القاهرة، مصر.</p></div>
+    <div><b data-en="Links" data-ar="روابط">روابط</b><br><a href="#home">Home / الرئيسية</a><br><a href="#best">Products / المنتجات</a><br><a href="#contact">Contact / تواصل</a></div>
+    <div><b data-en="Policies" data-ar="السياسات">السياسات</b><br><span data-en="14-day exchange • Cash on delivery" data-ar="استبدال 14 يوم • دفع عند الاستلام">استبدال 14 يوم • دفع عند الاستلام</span></div>
+  </div>
+  <div class="copy">© 2026 VELMORA — velmoraeg.com (demo inspired by galvanoegy.com, all content original)</div>
+</footer>
+
+<!-- CART DRAWER -->
+<div class="overlay" id="overlay"></div>
+<aside class="cart" id="cartDrawer">
+  <div class="cart-head"><b data-en="Your cart" data-ar="السلة">السلة</b><button id="closeCart">✕</button></div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="cart-foot">
+    <div class="total"><span data-en="Total" data-ar="الإجمالي">الإجمالي</span><b id="cartTotal">0 EGP</b></div>
+    <p class="tiny" data-en="Free shipping over 1999 EGP • COD available" data-ar="شحن مجاني فوق 1999 جنيه • دفع عند الاستلام">شحن مجاني فوق 1999 جنيه • دفع عند الاستلام</p>
+    <button class="btn primary full" id="checkoutBtn" data-en="Checkout (WhatsApp order)" data-ar="إتمام الطلب (واتساب)">إتمام الطلب (واتساب)</button>
+    <button class="btn ghost full" id="continueBtn" data-en="Continue shopping" data-ar="كمّل تسوّق">كمّل تسوّق</button>
+  </div>
+</aside>
+
+<!-- QUICK VIEW -->
+<div class="modal" id="quickModal">
+  <div class="modal-card">
+    <button class="modal-x" id="closeModal">✕</button>
+    <div class="modal-img" id="mImg"></div>
+    <div class="modal-body">
+      <h3 id="mName"></h3>
+      <p id="mPrice"></p>
+      <p class="tiny" id="mDesc"></p>
+      <div class="sizes" id="mSizes"><span>S</span><span>M</span><span>L</span><span>XL</span><span>XXL</span></div>
+      <button class="btn primary full" id="mAdd" data-en="Add to cart" data-ar="ضيف للسلة">ضيف للسلة</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
