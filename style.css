@@ -6,6 +6,7 @@ body{font-family:'Cairo','Inter',system-ui,sans-serif;background:var(--bg);color
 .header{position:sticky;top:0;background:rgba(250,249,247,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);z-index:50}
 .header-in{display:flex;align-items:center;justify-content:space-between;height:62px}
 .logo{font-weight:800;letter-spacing:4px;font-size:22px;text-decoration:none;color:var(--ink)}
+.logo img{height:36px;display:block}
 .nav{display:flex;gap:22px}
 .nav a{text-decoration:none;color:var(--ink);font-weight:600;font-size:15px}
 .actions{display:flex;gap:8px;align-items:center}
