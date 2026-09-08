@@ -3,29 +3,29 @@ let LANG = 'ar';
 const $ = (s) => document.querySelector(s);
 
 const COLLECTIONS = [
-  { id:'tshirt', en:'T-shirts', ar:'تيشيرتات', c:'linear-gradient(135deg,#222,#555)', en_sub:'heavyweight', ar_sub:'قطن تقيل' },
-  { id:'linen', en:'Linen Shirts', ar:'قمصان لينن', c:'linear-gradient(135deg,#b99c5e,#e8d9b0)', en_sub:'breathable', ar_sub:'خامة تتنفس' },
-  { id:'jeans', en:'Wide-Leg Jeans', ar:'جينز وايد ليج', c:'linear-gradient(135deg,#1e3a5f,#4a7ab5)', en_sub:'denim', ar_sub:'دنيم' },
-  { id:'sweat', en:'Sweatpants', ar:'سويت بانتس', c:'linear-gradient(135deg,#3a3a3a,#8a8a8a)', en_sub:'fleece', ar_sub:'ميلتون' },
-  { id:'tailored', en:'Tailored Pants', ar:'بناطيل كلاسيك', c:'linear-gradient(135deg,#111,#444)', en_sub:'smart', ar_sub:'شيك' },
-  { id:'knit', en:'Knitted Polos', ar:'بولو نيت', c:'linear-gradient(135deg,#5b3a29,#b98a5e)', en_sub:'knit', ar_sub:'تريكو' },
-  { id:'tank', en:'Tank Tops', ar:'تانك توب', c:'linear-gradient(135deg,#0f0f0f,#5a5a5a)', en_sub:'gym', ar_sub:'جيم' },
-  { id:'regular', en:'Regular Fit', ar:'ريجولر فيت', c:'linear-gradient(135deg,#274156,#7fb5a8)', en_sub:'daily', ar_sub:'يومي' },
+  { id:'tshirt', en:'T-shirts', ar:'تيشيرتات', img:'assets/p-tee-white.jpg', en_sub:'heavyweight', ar_sub:'قطن تقيل' },
+  { id:'linen', en:'Linen Shirts', ar:'قمصان لينن', img:'assets/p-shirt-summer.jpg', en_sub:'breathable', ar_sub:'خامة تتنفس' },
+  { id:'jeans', en:'Wide-Leg Jeans', ar:'جينز وايد ليج', img:'assets/p-jeans-ice.jpg', en_sub:'denim', ar_sub:'دنيم' },
+  { id:'sweat', en:'Sweat & Lounge', ar:'سويت ولاونج', img:'assets/p-lounge-cream.jpg', en_sub:'fleece', ar_sub:'ميلتون' },
+  { id:'tailored', en:'Tailored Pants', ar:'بناطيل كلاسيك', img:'assets/p-pants-beige.jpg', en_sub:'smart', ar_sub:'شيك' },
+  { id:'knit', en:'Knitted Polos', ar:'بولو نيت', img:'assets/p-polo-duo.jpg', en_sub:'knit', ar_sub:'تريكو' },
+  { id:'tank', en:'Tank Tops', ar:'تانك توب', img:'assets/p-tank-white.jpg', en_sub:'gym', ar_sub:'جيم' },
+  { id:'regular', en:'Essential Tees', ar:'أساسيات', img:'assets/p-tee-black.jpg', en_sub:'daily', ar_sub:'يومي' },
 ];
 
 const PRODUCTS = [
-  { id:1, cat:'tshirt', en:'Essential White Tee', ar:'تيشيرت أبيض أساسي', price:350, old:null, stock:true, c:'linear-gradient(135deg,#eee,#bbb)' },
-  { id:2, cat:'tshirt', en:'Essential Black Tee', ar:'تيشيرت أسود أساسي', price:350, old:450, stock:true, c:'linear-gradient(135deg,#222,#000)' },
-  { id:3, cat:'sweat', en:'Wide-Leg Black Sweatpants', ar:'سويت بانتس أسود وايد ليج', price:700, old:null, stock:false, c:'linear-gradient(135deg,#333,#111)' },
-  { id:4, cat:'sweat', en:'Wide-Leg Grey Sweatpants', ar:'سويت بانتس رمادي وايد ليج', price:700, old:null, stock:true, c:'linear-gradient(135deg,#999,#555)' },
-  { id:5, cat:'linen', en:'Relaxed Linen Shirt — White', ar:'قميص لينن أوفرسايز — أبيض', price:750, old:null, stock:true, c:'linear-gradient(135deg,#f5efe0,#cbb98a)' },
-  { id:6, cat:'linen', en:'Relaxed Linen Shirt — Black', ar:'قميص لينن أوفرسايز — أسود', price:750, old:850, stock:true, c:'linear-gradient(135deg,#444,#111)' },
-  { id:7, cat:'jeans', en:'Wide-Leg Jeans — Ice Blue', ar:'جينز وايد ليج — أزرق ثلجي', price:900, old:null, stock:true, c:'linear-gradient(135deg,#9fc3e8,#3d6a99)' },
-  { id:8, cat:'jeans', en:'Wide-Leg Jeans — Raw', ar:'جينز وايد ليج — خام', price:900, old:null, stock:false, c:'linear-gradient(135deg,#2c3e50,#5d6d7e)' },
-  { id:9, cat:'tank', en:'Heavyweight Tank — White', ar:'تانك توب تقيل — أبيض', price:400, old:null, stock:true, c:'linear-gradient(135deg,#fff,#ccc)' },
-  { id:10, cat:'tank', en:'Heavyweight Tank — Black', ar:'تانك توب تقيل — أسود', price:400, old:null, stock:true, c:'linear-gradient(135deg,#222,#555)' },
-  { id:11, cat:'knit', en:'Knitted Polo — Beige', ar:'بولو نيت — بيج', price:750, old:null, stock:true, c:'linear-gradient(135deg,#d9c7a7,#8a6d3f)' },
-  { id:12, cat:'tailored', en:'Tailored Linen Pants', ar:'بنطلون لينن كلاسيك', price:850, old:null, stock:true, c:'linear-gradient(135deg,#4a4a4a,#999)' },
+  { id:1, cat:'tshirt', en:'Essential White Tee', ar:'تيشيرت أبيض أساسي', price:350, old:null, stock:true, img:'assets/p-tee-white.jpg' },
+  { id:2, cat:'tshirt', en:'Essential Black Tee', ar:'تيشيرت أسود أساسي', price:350, old:450, stock:true, img:'assets/p-tee-black.jpg' },
+  { id:3, cat:'sweat', en:'Oversized Grey Sweatshirt', ar:'سويت شيرت رمادي أوفرسايز', price:600, old:null, stock:true, img:'assets/p-sweatshirt-grey.jpg' },
+  { id:4, cat:'sweat', en:'Lounge Set — Cream', ar:'طقم لاونج — كريمي', price:700, old:null, stock:true, img:'assets/p-lounge-cream.jpg' },
+  { id:5, cat:'linen', en:'Summer Striped Shirt', ar:'قميص صيفي مخطط', price:750, old:null, stock:true, img:'assets/p-shirt-summer.jpg' },
+  { id:6, cat:'linen', en:'Black Evening Shirt', ar:'قميص أسود أنيق', price:750, old:850, stock:true, img:'assets/p-shirt-black.jpg' },
+  { id:7, cat:'jeans', en:'Wide-Leg Jeans — Ice Blue', ar:'جينز وايد ليج — أزرق ثلجي', price:900, old:null, stock:true, img:'assets/p-jeans-ice.jpg' },
+  { id:8, cat:'jeans', en:'Wide-Leg Jeans — Raw', ar:'جينز وايد ليج — خام', price:900, old:null, stock:true, img:'assets/p-jeans-raw.jpg' },
+  { id:9, cat:'tank', en:'Heavyweight Tank — White', ar:'تانك توب تقيل — أبيض', price:400, old:null, stock:true, img:'assets/p-tank-white.jpg' },
+  { id:10, cat:'tank', en:'Heavyweight Tank — Black', ar:'تانك توب تقيل — أسود', price:400, old:null, stock:true, img:'assets/p-tank-black.jpg' },
+  { id:11, cat:'knit', en:'Two-Tone Knitted Polo', ar:'بولو نيت تو-تون', price:750, old:null, stock:true, img:'assets/p-polo-duo.jpg' },
+  { id:12, cat:'tailored', en:'Tailored Pants — Beige', ar:'بنطلون كلاسيك — بيج', price:850, old:null, stock:true, img:'assets/p-pants-beige.jpg' },
 ];
 
 let cart = JSON.parse(localStorage.getItem('varnoto_cart') || '[]');
@@ -36,7 +36,10 @@ function t(en, ar){ return LANG === 'ar' ? ar : en; }
 function renderCollections(){
   $('#collectionsGrid').innerHTML = COLLECTIONS.map(x=>`
     <div class="card" onclick="setFilter('${x.id}')">
-      <div class="thumb" style="background:${x.c}">${t(x.en,x.ar)}</div>
+      <div class="thumb" onclick="setFilter('${x.id}')">
+        <img src="${x.img}" alt="${x.en}" loading="lazy">
+        <span class="thumb-label">${t(x.en,x.ar)}</span>
+      </div>
       <div class="p-body"><b>${t(x.en,x.ar)}</b><span class="tiny">${t(x.en_sub,x.ar_sub)}</span></div>
     </div>`).join('');
 }
@@ -48,7 +51,8 @@ function renderProducts(){
   );
   $('#productsGrid').innerHTML = list.length ? list.map(p=>`
     <div class="card">
-      <div class="thumb" style="background:${p.c}" onclick="quick(${p.id})">
+      <div class="thumb" onclick="quick(${p.id})">
+        <img src="${p.img}" alt="${p.en}" loading="lazy">
         ${!p.stock ? `<span class="badge out">${t('Sold out','نفد المخزون')}</span>` : (p.old?`<span class="badge">-${Math.round((1-p.price/p.old)*100)}%</span>`:'')}
       </div>
       <div class="p-body">
@@ -72,7 +76,7 @@ function renderCart(){
   if(!cart.length){ box.innerHTML = `<p class="tiny">${t('Your cart is empty.','سلتك فاضية.')}</p>`; $('#cartTotal').textContent='0 EGP'; return; }
   box.innerHTML = cart.map(r=>{
     const p = PRODUCTS.find(x=>x.id===r.id);
-    return `<div class="cart-row"><div class="dot" style="background:${p.c}"></div>
+    return `<div class="cart-row"><img class="dot" src="${p.img}" alt="">
       <div style="flex:1"><b>${t(p.en,p.ar)}</b><span class="tiny">${p.price} EGP</span>
       <div class="qty"><button onclick="chQty(${p.id},-1)">−</button><span>${r.q}</span><button onclick="chQty(${p.id},1)">+</button></div></div>
       <button onclick="rmItem(${p.id})" style="border:none;background:none;cursor:pointer">🗑</button></div>`;
@@ -86,7 +90,7 @@ window.chQty=chQty; window.rmItem=rmItem; window.addToCart=addToCart;
 
 window.quick = (id)=>{
   const p = PRODUCTS.find(x=>x.id===id);
-  $('#mImg').style.background = p.c;
+  $('#mImg').innerHTML = `<img src="${p.img}" alt="${p.en}">`;
   $('#mName').textContent = t(p.en,p.ar);
   $('#mPrice').textContent = p.price+' EGP'+(p.old?' (was '+p.old+' EGP)':'');
   $('#mDesc').textContent = t('Heavyweight fabric, Egyptian made. Sizes S–XXL. 14-day exchange, COD available.','خامة تقيلة صناعة مصرية. مقاسات S–XXL. استبدال 14 يوم ودفع عند الاستلام.');

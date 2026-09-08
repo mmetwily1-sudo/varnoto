@@ -21,6 +21,8 @@ Live demo: GitHub Pages (after push → Settings → Pages → Deploy from branc
 - **VARNOTO** → varnoto.com ✅ AVAILABLE, no clothing-brand conflict (chosen)
 - Rejected: VELMORA/VELMO (existing fashion uses), VARNO (active UK streetwear competitor), VARENO/VELARO/ELVARO (active fashion uses), ROVANO (active menswear)
 
+## Photography
+Real model photography via Pexels (free license, no attribution required) in `assets/` — every image visually verified before publishing. Rejected AI generation (rate-limited + off-brief) and heavy GitHub mockup SaaS boilerplates (ThreadForge etc.) as overkill for a static store.
 ## Run locally
 ```bash
 cd velmora
