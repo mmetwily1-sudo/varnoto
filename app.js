@@ -1,4 +1,4 @@
-// VELMORA — original demo store inspired by galvanoegy.com (no copied assets/text)
+// VARNOTO — original demo store inspired by galvanoegy.com (no copied assets/text)
 let LANG = 'ar';
 const $ = (s) => document.querySelector(s);
 
@@ -28,7 +28,7 @@ const PRODUCTS = [
   { id:12, cat:'tailored', en:'Tailored Linen Pants', ar:'بنطلون لينن كلاسيك', price:850, old:null, stock:true, c:'linear-gradient(135deg,#4a4a4a,#999)' },
 ];
 
-let cart = JSON.parse(localStorage.getItem('velmora_cart') || '[]');
+let cart = JSON.parse(localStorage.getItem('varnoto_cart') || '[]');
 let filter = 'all', query = '';
 
 function t(en, ar){ return LANG === 'ar' ? ar : en; }
@@ -59,7 +59,7 @@ function renderProducts(){
     </div>`).join('') : `<p>${t('No products found.','مفيش منتجات مطابقة.')}</p>`;
 }
 
-function saveCart(){ localStorage.setItem('velmora_cart', JSON.stringify(cart)); renderCart(); }
+function saveCart(){ localStorage.setItem('varnoto_cart', JSON.stringify(cart)); renderCart(); }
 function addToCart(id){
   const p = PRODUCTS.find(x=>x.id===id); if(!p||!p.stock) return;
   const f = cart.find(x=>x.id===id);
@@ -132,7 +132,7 @@ document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{filter=c.dataset.f;
 $('#checkoutBtn').onclick = ()=>{
   if(!cart.length) return alert(t('Cart is empty','السلة فاضية'));
   const total = cart.reduce((a,r)=>a+PRODUCTS.find(x=>x.id===r.id).price*r.q,0);
-  const msg = encodeURIComponent((LANG==='ar'?'طلب جديد VELMORA:%0A':'New VELMORA order:%0A')+cart.map(r=>{const p=PRODUCTS.find(x=>x.id===r.id);return `${p.en} x${r.q}`}).join('%0A')+`%0ATotal: ${total} EGP`);
+  const msg = encodeURIComponent((LANG==='ar'?'طلب جديد VARNOTO:%0A':'New VARNOTO order:%0A')+cart.map(r=>{const p=PRODUCTS.find(x=>x.id===r.id);return `${p.en} x${r.q}`}).join('%0A')+`%0ATotal: ${total} EGP`);
   window.open('https://wa.me/201000000000?text='+msg,'_blank');
 };
 $('#newsForm').onsubmit = (e)=>{ e.preventDefault(); $('#newsMsg').textContent = t('Thanks! Check your email for 10% off.','شكراً! تابع إيميلك لخصم 10%.'); e.target.reset(); };
