@@ -23,6 +23,12 @@ Live demo: GitHub Pages (after push → Settings → Pages → Deploy from branc
 
 ## Photography
 Real model photography via Pexels (free license, no attribution required) in `assets/` — every image visually verified before publishing. Rejected AI generation (rate-limited + off-brief) and heavy GitHub mockup SaaS boilerplates (ThreadForge etc.) as overkill for a static store.
+## Cloud backend (Supabase)
+- `supabase-schema.sql` — run once in Supabase SQL Editor (table `store_config` + public read/write policies).
+- `app.js` — `boot()` pulls the cloud config on every visit (localStorage fallback), live Realtime updates included.
+- `admin.html` — every save writes locally + PATCHes Supabase; sync status shown in the dashboard.
+- To activate: create a free project at supabase.com → run the SQL → paste Project URL + anon key into `app.js` + `admin.html` (`__SUPABASE_URL__` / `__SUPABASE_KEY__`) → push.
+
 ## Run locally
 ```bash
 cd velmora

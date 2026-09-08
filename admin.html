@@ -55,6 +55,7 @@ td input[type=text],td input[type=number]{width:100%;padding:7px 9px;border:1px 
 
 <div id="dash" class="admin">
 <h1>أهلاً بيك 👋</h1>
+<p class="tiny" id="syncState">☁ جاري فحص الاتصال...</p>
 <p class="tiny">تحكم كامل: المنتجات والأسعار والمخزون + النصوص + روابط التواصل + نسخة احتياطية.</p>
 <div class="stats">
 <div class="stat"><b id="stCount">–</b><span>منتج</span></div>
@@ -124,12 +125,34 @@ const DEFAULTS=[
 ];
 const $=s=>document.querySelector(s);
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return{};}}
-function save(s){localStorage.setItem(KEY,JSON.stringify(s));}
+function save(s){localStorage.setItem(KEY,JSON.stringify(s));pushRemote(s);}
+const SUPA_URL='__SUPABASE_URL__', SUPA_KEY='__SUPABASE_KEY__';
+const supaOn=()=>SUPA_URL&&!SUPA_URL.startsWith('__');
+function setSync(t){const e=$('#syncState');if(e)e.textContent=t;}
+async function pushRemote(s){
+ if(!supaOn()){setSync('💾 حفظ محلي فقط (السحابة غير مربوطة بعد)');return;}
+ setSync('☁ جاري المزامنة مع كل الزوار...');
+ try{
+  const r=await fetch(SUPA_URL+'/rest/v1/store_config?id=eq.1',{method:'PATCH',headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({data:s,updated_at:new Date().toISOString()})});
+  setSync(r.ok?'☁ متزامن — التعديلات ظاهرة لكل الزوار ✅':'⚠ تعذر المزامنة — محفوظ محلياً فقط');
+ }catch(e){setSync('⚠ تعذر المزامنة — محفوظ محلياً فقط');}
+}
+async function syncFromCloud(){
+ if(!supaOn()){setSync('💾 وضع محلي — اربط Supabase للمزامنة العامة');return;}
+ setSync('☁ جاري التحميل من السحابة...');
+ try{
+  const r=await fetch(SUPA_URL+'/rest/v1/store_config?id=eq.1&select=data',{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY}});
+  const j=await r.json();const d=j&&j[0]&&j[0].data;
+  if(d&&(d.products||d.announce||d.hero||d.contact)){localStorage.setItem(KEY,JSON.stringify(d));fillAll();setSync('☁ متصل — التعديلات تظهر لكل الزوار ✅');}
+  else setSync('☁ متصل — لا بيانات سحابية بعد، احفظ أول تعديل');
+ }catch(e){setSync('⚠ تعذر الاتصال بالسحابة — شغال محلي');}
+}
+function fillAll(){renderRows();fillTexts();fillC();}
 function merged(){const s=load();const byId={};(s.products||[]).forEach(o=>{if(o&&o.id!=null)byId[o.id]=o;});return DEFAULTS.map(d=>Object.assign({},d,byId[d.id]||{}));}
 
 // gate
-if(sessionStorage.getItem('varnoto_admin')==='1'){$('#gate').style.display='none';$('#dash').style.display='block';}
-$('#pinBtn').onclick=()=>{if($('#pin').value===PIN){sessionStorage.setItem('varnoto_admin','1');$('#gate').style.display='none';$('#dash').style.display='block';}else{$('#pinMsg').textContent='رمز غلط، حاول تاني.';}};
+if(sessionStorage.getItem('varnoto_admin')==='1'){$('#gate').style.display='none';$('#dash').style.display='block';syncFromCloud();}
+$('#pinBtn').onclick=()=>{if($('#pin').value===PIN){sessionStorage.setItem('varnoto_admin','1');$('#gate').style.display='none';$('#dash').style.display='block';syncFromCloud();}else{$('#pinMsg').textContent='رمز غلط، حاول تاني.';}};
 $('#pin').onkeydown=e=>{if(e.key==='Enter')$('#pinBtn').click();};
 
 // tabs
@@ -158,11 +181,13 @@ $('#saveProducts').onclick=()=>{
 };
 
 // texts
-(function fillTexts(){const s=load();$('#ann_ar').value=(s.announce&&s.announce.ar)||'شحن مجاني للطلبات فوق 1999 جنيه 🚚';$('#ann_en').value=(s.announce&&s.announce.en)||'Free shipping on orders over 1999 EGP 🚚';$('#ht_ar').value=(s.hero&&s.hero.title_ar)||'أساسيات تقيلة، معمولة لمصر.';$('#ht_en').value=(s.hero&&s.hero.title_en)||'Heavyweight essentials, made for Egypt.';$('#hs_ar').value=(s.hero&&s.hero.sub_ar)||'تيشيرتات، قمصان لينن، جينز وايد ليج وسويت بانتس. قصّات نضيفة وأسعار واضحة بالجنيه.';$('#hs_en').value=(s.hero&&s.hero.sub_en)||'T-shirts, linen shirts, wide-leg jeans & sweatpants. Clean cuts, honest prices in EGP.';})();
+function fillTexts(){const s=load();$('#ann_ar').value=(s.announce&&s.announce.ar)||'شحن مجاني للطلبات فوق 1999 جنيه 🚚';$('#ann_en').value=(s.announce&&s.announce.en)||'Free shipping on orders over 1999 EGP 🚚';$('#ht_ar').value=(s.hero&&s.hero.title_ar)||'أساسيات تقيلة، معمولة لمصر.';$('#ht_en').value=(s.hero&&s.hero.title_en)||'Heavyweight essentials, made for Egypt.';$('#hs_ar').value=(s.hero&&s.hero.sub_ar)||'تيشيرتات، قمصان لينن، جينز وايد ليج وسويت بانتس. قصّات نضيفة وأسعار واضحة بالجنيه.';$('#hs_en').value=(s.hero&&s.hero.sub_en)||'T-shirts, linen shirts, wide-leg jeans & sweatpants. Clean cuts, honest prices in EGP.';}
+fillTexts();
 $('#saveTexts').onclick=()=>{const s=load();s.announce={ar:$('#ann_ar').value,en:$('#ann_en').value};s.hero={title_ar:$('#ht_ar').value,title_en:$('#ht_en').value,sub_ar:$('#hs_ar').value,sub_en:$('#hs_en').value};save(s);$('#msgT').textContent='✅ اتحفظ';setTimeout(()=>$('#msgT').textContent='',2500);};
 
 // contact
-(function fillC(){const s=load();$('#c_wa').value=(s.contact&&s.contact.whatsapp)||'201000000000';$('#c_ig').value=(s.contact&&s.contact.instagram)||'';$('#c_tt').value=(s.contact&&s.contact.tiktok)||'';})();
+function fillC(){const s=load();$('#c_wa').value=(s.contact&&s.contact.whatsapp)||'201000000000';$('#c_ig').value=(s.contact&&s.contact.instagram)||'';$('#c_tt').value=(s.contact&&s.contact.tiktok)||'';}
+fillC();
 $('#saveContact').onclick=()=>{const s=load();s.contact={whatsapp:$('#c_wa').value.trim(),instagram:$('#c_ig').value.trim(),tiktok:$('#c_tt').value.trim()};save(s);$('#msgC').textContent='✅ اتحفظ';setTimeout(()=>$('#msgC').textContent='',2500);};
 
 // backup

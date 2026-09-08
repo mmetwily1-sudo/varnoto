@@ -31,8 +31,11 @@ const PRODUCTS = [
 // ---- Store overrides (controlled from admin.html, stored in this browser) ----
 const STORE_KEY='varnoto_store_v1';
 function getStore(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY))||{}; }catch(e){ return {}; } }
-(function applyStoreProducts(){
-  const s=getStore();
+(function(){
+  applyStoreProducts(getStore());
+})();
+function applyStoreProducts(s){
+  s=s||getStore();
   if(!Array.isArray(s.products)||!s.products.length) return;
   const byId={}; s.products.forEach(o=>{ if(o&&o.id!=null) byId[o.id]=o; });
   PRODUCTS.forEach(p=>{
@@ -43,7 +46,7 @@ function getStore(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY))||{}
     if(o.stock!==undefined) p.stock=!!o.stock;
     if(o.img) p.img=o.img;
   });
-})();
+}
 
 let cart = JSON.parse(localStorage.getItem('varnoto_cart') || '[]');
 let filter = 'all', query = '';
@@ -117,6 +120,42 @@ window.quick = (id)=>{
   $('#quickModal').classList.add('show');
 };
 function closeModal(){ $('#quickModal').classList.remove('show'); }
+
+// ---- Cloud backend (Supabase) — filled after project creation ----
+const SUPABASE_URL='__SUPABASE_URL__', SUPABASE_KEY='__SUPABASE_KEY__';
+const supaOn=()=>SUPABASE_URL&&!SUPABASE_URL.startsWith('__')&&SUPABASE_KEY&&!SUPABASE_KEY.startsWith('__');
+async function pullRemote(){
+  if(!supaOn()) return null;
+  try{
+    const r=await fetch(SUPABASE_URL+'/rest/v1/store_config?id=eq.1&select=data',{headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY}});
+    if(!r.ok) return null;
+    const j=await r.json();
+    return (j&&j[0]&&j[0].data)||null;
+  }catch(e){ return null; }
+}
+function subscribeRealtime(){
+  try{
+    if(!supaOn()||!window.supabase) return;
+    window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY).channel('store')
+      .on('postgres_changes',{event:'*',schema:'public',table:'store_config'},p=>{
+        const d=p.new&&p.new.data;
+        if(!d) return;
+        try{localStorage.setItem(STORE_KEY,JSON.stringify(d));}catch(e){}
+        applyStoreProducts(d); setLang(LANG);
+      }).subscribe();
+  }catch(e){}
+}
+async function boot(){
+  try{
+    const remote=await pullRemote();
+    if(remote&&(remote.products||remote.announce||remote.hero||remote.contact)){
+      try{localStorage.setItem(STORE_KEY,JSON.stringify(remote));}catch(e){}
+      applyStoreProducts(remote);
+    }
+  }catch(e){}
+boot();
+  subscribeRealtime();
+}
 
 function openCart(){ $('#cartDrawer').classList.add('open'); $('#overlay').classList.add('show'); }
 function closeCart(){ $('#cartDrawer').classList.remove('open'); $('#overlay').classList.remove('show'); }
