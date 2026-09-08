@@ -28,6 +28,23 @@ const PRODUCTS = [
   { id:12, cat:'tailored', en:'Tailored Pants — Beige', ar:'بنطلون كلاسيك — بيج', price:850, old:null, stock:true, img:'assets/p-pants-beige.jpg' },
 ];
 
+// ---- Store overrides (controlled from admin.html, stored in this browser) ----
+const STORE_KEY='varnoto_store_v1';
+function getStore(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY))||{}; }catch(e){ return {}; } }
+(function applyStoreProducts(){
+  const s=getStore();
+  if(!Array.isArray(s.products)||!s.products.length) return;
+  const byId={}; s.products.forEach(o=>{ if(o&&o.id!=null) byId[o.id]=o; });
+  PRODUCTS.forEach(p=>{
+    const o=byId[p.id]; if(!o) return;
+    if(o.en) p.en=o.en; if(o.ar) p.ar=o.ar;
+    if(o.price!==undefined&&o.price!==''&&o.price!==null) p.price=Number(o.price);
+    p.old=(o.old===undefined||o.old===''||o.old===null)?null:Number(o.old);
+    if(o.stock!==undefined) p.stock=!!o.stock;
+    if(o.img) p.img=o.img;
+  });
+})();
+
 let cart = JSON.parse(localStorage.getItem('varnoto_cart') || '[]');
 let filter = 'all', query = '';
 
@@ -119,6 +136,22 @@ function setLang(l){
   $('#announce').textContent = l==='ar'?'شحن مجاني للطلبات فوق 1999 جنيه 🚚':'Free shipping on orders over 1999 EGP 🚚';
   document.querySelectorAll('[data-en]').forEach(el=>{ el.textContent = l==='ar'?el.dataset.ar:el.dataset.en; });
   document.querySelectorAll('[data-en-ph]').forEach(el=>{ el.placeholder = l==='ar'?el.dataset.arPh:el.dataset.enPh; });
+  // dashboard-controlled texts & links
+  try{
+    const s=getStore();
+    if(s.announce&&s.announce[l]) $('#announce').textContent=s.announce[l];
+    if(s.hero){
+      if(s.hero['title_'+l]&&$('#heroTitle')) $('#heroTitle').textContent=s.hero['title_'+l];
+      if(s.hero['sub_'+l]&&$('#heroSub')) $('#heroSub').textContent=s.hero['sub_'+l];
+    }
+    const wa=((s.contact&&s.contact.whatsapp)||'201000000000').replace(/\D/g,'')||'201000000000';
+    window.VARNOTO_WA='https://wa.me/'+wa;
+    if($('#waBtn')) $('#waBtn').href=window.VARNOTO_WA;
+    if(s.contact){
+      if(s.contact.instagram&&$('#igBtn')) $('#igBtn').href=s.contact.instagram;
+      if(s.contact.tiktok&&$('#ttBtn')) $('#ttBtn').href=s.contact.tiktok;
+    }
+  }catch(e){}
   renderCollections(); renderProducts(); renderCart();
 }
 
@@ -137,7 +170,7 @@ $('#checkoutBtn').onclick = ()=>{
   if(!cart.length) return alert(t('Cart is empty','السلة فاضية'));
   const total = cart.reduce((a,r)=>a+PRODUCTS.find(x=>x.id===r.id).price*r.q,0);
   const msg = encodeURIComponent((LANG==='ar'?'طلب جديد VARNOTO:%0A':'New VARNOTO order:%0A')+cart.map(r=>{const p=PRODUCTS.find(x=>x.id===r.id);return `${p.en} x${r.q}`}).join('%0A')+`%0ATotal: ${total} EGP`);
-  window.open('https://wa.me/201000000000?text='+msg,'_blank');
+  window.open((window.VARNOTO_WA||'https://wa.me/201000000000')+'?text='+msg,'_blank');
 };
 $('#newsForm').onsubmit = (e)=>{ e.preventDefault(); $('#newsMsg').textContent = t('Thanks! Check your email for 10% off.','شكراً! تابع إيميلك لخصم 10%.'); e.target.reset(); };
 

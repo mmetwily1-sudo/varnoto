@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة تحكم VARNOTO</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="stylesheet" href="style.css?v=2">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+.admin{max-width:1080px;margin:0 auto;padding:26px 18px 70px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}
+.tab{border:1px solid var(--line);background:#fff;border-radius:99px;padding:10px 20px;cursor:pointer;font-weight:800;font-family:inherit}
+.tab.active{background:#141414;color:#fff;border-color:#141414}
+.panel{display:none;background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px}
+.panel.active{display:block}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{border:1px solid var(--line);padding:8px;text-align:start;vertical-align:middle}
+th{background:#141414;color:#fff}
+td input[type=text],td input[type=number]{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:13px}
+.prow img{width:46px;height:56px;object-fit:cover;border-radius:8px}
+.field{margin-bottom:14px}
+.field label{display:block;font-weight:800;margin-bottom:6px;font-size:14px}
+.field input{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;font-family:inherit}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:700px){.row2{grid-template-columns:1fr}table{font-size:12px}}
+.stats{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}
+.stat{background:#141414;color:#fff;border-radius:14px;padding:12px 20px;min-width:130px}
+.stat b{display:block;font-size:22px}.stat span{font-size:12px;color:#cfc9bc}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.save{background:#141414;color:#fff;border:none;border-radius:12px;padding:13px 30px;font-weight:800;cursor:pointer;font-family:inherit;font-size:15px}
+.reset{background:#fff;border:1px solid #b3261e;color:#b3261e;border-radius:12px;padding:12px 20px;font-weight:800;cursor:pointer;font-family:inherit}
+.okmsg{color:#1c7a3d;font-weight:800;margin-top:10px}
+#gate{max-width:380px;margin:80px auto;text-align:center;background:#fff;border:1px solid var(--line);border-radius:18px;padding:36px 28px}
+#gate input{width:100%;padding:13px;border:1px solid var(--line);border-radius:12px;text-align:center;font-size:20px;letter-spacing:8px;margin:14px 0;font-family:inherit}
+#gate button{width:100%}
+#dash{display:none}
+</style>
+</head>
+<body>
+<div class="announce">لوحة تحكم VARNOTO — التعديلات تظهر على الموقع فوراً في نفس المتصفح</div>
+<header class="header"><div class="container header-in">
+<a class="logo" href="index.html"><img src="assets/logo.svg" alt="VARNOTO"></a>
+<div class="actions"><a class="lang-btn" style="text-decoration:none" href="index.html" target="_blank">👁 معاينة الموقع</a></div>
+</div></header>
+
+<div id="gate">
+<h2>🔐 دخول الإدارة</h2>
+<p class="tiny">اكتب رمز الدخول (PIN)</p>
+<input id="pin" type="password" inputmode="numeric" maxlength="8" placeholder="••••">
+<button class="save" id="pinBtn">دخول</button>
+<p class="tiny" id="pinMsg"></p>
+</div>
+
+<div id="dash" class="admin">
+<h1>أهلاً بيك 👋</h1>
+<p class="tiny">تحكم كامل: المنتجات والأسعار والمخزون + النصوص + روابط التواصل + نسخة احتياطية.</p>
+<div class="stats">
+<div class="stat"><b id="stCount">–</b><span>منتج</span></div>
+<div class="stat"><b id="stStock">–</b><span>متاح في المخزون</span></div>
+<div class="stat"><b id="stAvg">–</b><span>متوسط السعر (جنيه)</span></div>
+</div>
+<div class="tabs">
+<button class="tab active" data-t="pProducts">📦 المنتجات</button>
+<button class="tab" data-t="pTexts">✏️ نصوص الموقع</button>
+<button class="tab" data-t="pContact">📞 التواصل</button>
+<button class="tab" data-t="pBackup">💾 نسخ احتياطي</button>
+</div>
+
+<div class="panel active" id="pProducts">
+<table><thead><tr><th></th><th>الاسم EN</th><th>الاسم AR</th><th>السعر</th><th>قبل الخصم</th><th>متاح؟</th><th>الصورة</th></tr></thead>
+<tbody id="prodRows"></tbody></table>
+<div class="btnrow"><button class="save" id="saveProducts">💾 حفظ المنتجات</button><span class="okmsg" id="msgP"></span></div>
+</div>
+
+<div class="panel" id="pTexts">
+<div class="field"><label>شريط الإعلان (عربي)</label><input id="ann_ar" type="text"></div>
+<div class="field"><label>شريط الإعلان (English)</label><input id="ann_en" type="text" dir="ltr"></div>
+<div class="row2">
+<div class="field"><label>عنوان البنر (عربي)</label><input id="ht_ar" type="text"></div>
+<div class="field"><label>عنوان البنر (English)</label><input id="ht_en" type="text" dir="ltr"></div>
+</div>
+<div class="row2">
+<div class="field"><label>وصف البنر (عربي)</label><input id="hs_ar" type="text"></div>
+<div class="field"><label>وصف البنر (English)</label><input id="hs_en" type="text" dir="ltr"></div>
+</div>
+<div class="btnrow"><button class="save" id="saveTexts">💾 حفظ النصوص</button><span class="okmsg" id="msgT"></span></div>
+</div>
+
+<div class="panel" id="pContact">
+<div class="field"><label>رقم واتساب (بالكود الدولي بدون +)</label><input id="c_wa" type="text" dir="ltr" placeholder="201000000000"></div>
+<div class="field"><label>رابط انستجرام</label><input id="c_ig" type="text" dir="ltr" placeholder="https://instagram.com/..."></div>
+<div class="field"><label>رابط تيك توك</label><input id="c_tt" type="text" dir="ltr" placeholder="https://tiktok.com/..."></div>
+<div class="btnrow"><button class="save" id="saveContact">💾 حفظ التواصل</button><span class="okmsg" id="msgC"></span></div>
+</div>
+
+<div class="panel" id="pBackup">
+<p>حمّل نسخة من كل إعدادات المتجر، أو استرجعها على أي جهاز تاني.</p>
+<div class="btnrow">
+<button class="save" id="expBtn">⬇️ تحميل نسخة (JSON)</button>
+<label class="save" style="background:#fff;color:#141414;border:1px solid #141414;cursor:pointer">⬆️ استرجاع نسخة<input id="impFile" type="file" accept=".json" hidden></label>
+<button class="reset" id="resetBtn">🗑 إعادة ضبط المصنع</button>
+</div>
+<p class="tiny">ملحوظة: الحفظ هنا في نفس المتصفح (localStorage). النسخة JSON هي اللي بتنقل الإعدادات لجهاز آخر.</p>
+</div>
+</div>
+
+<script>
+const PIN='2026', KEY='varnoto_store_v1';
+const DEFAULTS=[
+ {id:1,cat:'tshirt',en:'Essential White Tee',ar:'تيشيرت أبيض أساسي',price:350,old:'',stock:true,img:'assets/p-tee-white.jpg'},
+ {id:2,cat:'tshirt',en:'Essential Black Tee',ar:'تيشيرت أسود أساسي',price:350,old:450,stock:true,img:'assets/p-tee-black.jpg'},
+ {id:3,cat:'sweat',en:'Oversized Grey Sweatshirt',ar:'سويت شيرت رمادي أوفرسايز',price:600,old:'',stock:true,img:'assets/p-sweatshirt-grey.jpg'},
+ {id:4,cat:'sweat',en:'Lounge Set — Cream',ar:'طقم لاونج — كريمي',price:700,old:'',stock:true,img:'assets/p-lounge-cream.jpg'},
+ {id:5,cat:'linen',en:'Summer Striped Shirt',ar:'قميص صيفي مخطط',price:750,old:'',stock:true,img:'assets/p-shirt-summer.jpg'},
+ {id:6,cat:'linen',en:'Black Evening Shirt',ar:'قميص أسود أنيق',price:750,old:850,stock:true,img:'assets/p-shirt-black.jpg'},
+ {id:7,cat:'jeans',en:'Wide-Leg Jeans — Ice Blue',ar:'جينز وايد ليج — أزرق ثلجي',price:900,old:'',stock:true,img:'assets/p-jeans-ice.jpg'},
+ {id:8,cat:'jeans',en:'Wide-Leg Jeans — Raw',ar:'جينز وايد ليج — خام',price:900,old:'',stock:true,img:'assets/p-jeans-raw.jpg'},
+ {id:9,cat:'tank',en:'Heavyweight Tank — White',ar:'تانك توب تقيل — أبيض',price:400,old:'',stock:true,img:'assets/p-tank-white.jpg'},
+ {id:10,cat:'tank',en:'Heavyweight Tank — Black',ar:'تانك توب تقيل — أسود',price:400,old:'',stock:true,img:'assets/p-tank-black.jpg'},
+ {id:11,cat:'knit',en:'Two-Tone Knitted Polo',ar:'بولو نيت تو-تون',price:750,old:'',stock:true,img:'assets/p-polo-duo.jpg'},
+ {id:12,cat:'tailored',en:'Tailored Pants — Beige',ar:'بنطلون كلاسيك — بيج',price:850,old:'',stock:true,img:'assets/p-pants-beige.jpg'}
+];
+const $=s=>document.querySelector(s);
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return{};}}
+function save(s){localStorage.setItem(KEY,JSON.stringify(s));}
+function merged(){const s=load();const byId={};(s.products||[]).forEach(o=>{if(o&&o.id!=null)byId[o.id]=o;});return DEFAULTS.map(d=>Object.assign({},d,byId[d.id]||{}));}
+
+// gate
+if(sessionStorage.getItem('varnoto_admin')==='1'){$('#gate').style.display='none';$('#dash').style.display='block';}
+$('#pinBtn').onclick=()=>{if($('#pin').value===PIN){sessionStorage.setItem('varnoto_admin','1');$('#gate').style.display='none';$('#dash').style.display='block';}else{$('#pinMsg').textContent='رمز غلط، حاول تاني.';}};
+$('#pin').onkeydown=e=>{if(e.key==='Enter')$('#pinBtn').click();};
+
+// tabs
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===b.dataset.t));});
+
+// products
+function renderRows(){
+ const rows=merged();
+ $('#prodRows').innerHTML=rows.map(p=>`<tr class="prow" data-id="${p.id}">
+  <td><img src="${p.img}" alt="" onerror="this.style.opacity=.2"></td>
+  <td><input type="text" data-k="en" value="${(p.en||'').replace(/"/g,'&quot;')}"></td>
+  <td><input type="text" data-k="ar" value="${(p.ar||'').replace(/"/g,'&quot;')}"></td>
+  <td><input type="number" data-k="price" value="${p.price}" min="0"></td>
+  <td><input type="number" data-k="old" value="${p.old===null||p.old===undefined?'':p.old}" min="0" placeholder="—"></td>
+  <td style="text-align:center"><input type="checkbox" data-k="stock" ${p.stock?'checked':''} style="width:20px;height:20px"></td>
+  <td><input type="text" data-k="img" value="${p.img||''}" dir="ltr" style="font-size:11px"></td></tr>`).join('');
+ const inStock=rows.filter(p=>p.stock).length;
+ $('#stCount').textContent=rows.length;$('#stStock').textContent=inStock;
+ $('#stAvg').textContent=Math.round(rows.reduce((a,p)=>a+Number(p.price||0),0)/rows.length);
+}
+$('#saveProducts').onclick=()=>{
+ const arr=[...document.querySelectorAll('.prow')].map(tr=>{
+  const o={id:Number(tr.dataset.id)};tr.querySelectorAll('[data-k]').forEach(inp=>{const k=inp.dataset.k;
+   if(inp.type==='checkbox')o[k]=inp.checked;else if(k==='price')o[k]=Number(inp.value||0);else if(k==='old')o[k]=inp.value===''?'':Number(inp.value);else o[k]=inp.value.trim();});return o;});
+ const s=load();s.products=arr;save(s);renderRows();$('#msgP').textContent='✅ اتحفظ — شوف الموقع';setTimeout(()=>$('#msgP').textContent='',2500);
+};
+
+// texts
+(function fillTexts(){const s=load();$('#ann_ar').value=(s.announce&&s.announce.ar)||'شحن مجاني للطلبات فوق 1999 جنيه 🚚';$('#ann_en').value=(s.announce&&s.announce.en)||'Free shipping on orders over 1999 EGP 🚚';$('#ht_ar').value=(s.hero&&s.hero.title_ar)||'أساسيات تقيلة، معمولة لمصر.';$('#ht_en').value=(s.hero&&s.hero.title_en)||'Heavyweight essentials, made for Egypt.';$('#hs_ar').value=(s.hero&&s.hero.sub_ar)||'تيشيرتات، قمصان لينن، جينز وايد ليج وسويت بانتس. قصّات نضيفة وأسعار واضحة بالجنيه.';$('#hs_en').value=(s.hero&&s.hero.sub_en)||'T-shirts, linen shirts, wide-leg jeans & sweatpants. Clean cuts, honest prices in EGP.';})();
+$('#saveTexts').onclick=()=>{const s=load();s.announce={ar:$('#ann_ar').value,en:$('#ann_en').value};s.hero={title_ar:$('#ht_ar').value,title_en:$('#ht_en').value,sub_ar:$('#hs_ar').value,sub_en:$('#hs_en').value};save(s);$('#msgT').textContent='✅ اتحفظ';setTimeout(()=>$('#msgT').textContent='',2500);};
+
+// contact
+(function fillC(){const s=load();$('#c_wa').value=(s.contact&&s.contact.whatsapp)||'201000000000';$('#c_ig').value=(s.contact&&s.contact.instagram)||'';$('#c_tt').value=(s.contact&&s.contact.tiktok)||'';})();
+$('#saveContact').onclick=()=>{const s=load();s.contact={whatsapp:$('#c_wa').value.trim(),instagram:$('#c_ig').value.trim(),tiktok:$('#c_tt').value.trim()};save(s);$('#msgC').textContent='✅ اتحفظ';setTimeout(()=>$('#msgC').textContent='',2500);};
+
+// backup
+$('#expBtn').onclick=()=>{const blob=new Blob([localStorage.getItem(KEY)||'{}'],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='varnoto-store-backup.json';a.click();};
+$('#impFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(r.result);save(o);location.reload();}catch(err){alert('ملف غير صالح');}};r.readAsText(f);};
+$('#resetBtn').onclick=()=>{if(confirm('متأكد؟ هيرجع كل حاجة للوضع الأصلي.')){localStorage.removeItem(KEY);location.reload();}};
+
+renderRows();
+</script>
+</body>
+</html>
