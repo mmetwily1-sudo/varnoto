@@ -122,7 +122,7 @@ window.quick = (id)=>{
 function closeModal(){ $('#quickModal').classList.remove('show'); }
 
 // ---- Cloud backend (Supabase) — filled after project creation ----
-const SUPABASE_URL='__SUPABASE_URL__', SUPABASE_KEY='__SUPABASE_KEY__';
+const SUPABASE_URL='https://xgokhpdhzafuluiqdtah.supabase.co', SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnb2tocGRoemFmdWx1aXFkdGFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5NjU0NDMsImV4cCI6MjEwNDU0MTQ0M30.2B-0GPvxh5KoXVM4jhN06hCt75LakazSC36bh637zQA';
 const supaOn=()=>SUPABASE_URL&&!SUPABASE_URL.startsWith('__')&&SUPABASE_KEY&&!SUPABASE_KEY.startsWith('__');
 async function pullRemote(){
   if(!supaOn()) return null;

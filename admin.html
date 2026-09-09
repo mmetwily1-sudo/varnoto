@@ -126,7 +126,7 @@ const DEFAULTS=[
 const $=s=>document.querySelector(s);
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return{};}}
 function save(s){localStorage.setItem(KEY,JSON.stringify(s));pushRemote(s);}
-const SUPA_URL='__SUPABASE_URL__', SUPA_KEY='__SUPABASE_KEY__';
+const SUPA_URL='https://xgokhpdhzafuluiqdtah.supabase.co', SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnb2tocGRoemFmdWx1aXFkdGFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5NjU0NDMsImV4cCI6MjEwNDU0MTQ0M30.2B-0GPvxh5KoXVM4jhN06hCt75LakazSC36bh637zQA';
 const supaOn=()=>SUPA_URL&&!SUPA_URL.startsWith('__');
 function setSync(t){const e=$('#syncState');if(e)e.textContent=t;}
 async function pushRemote(s){
