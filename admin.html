@@ -13,12 +13,13 @@
 .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}
 .tab{border:1px solid var(--line);background:#fff;border-radius:99px;padding:10px 20px;cursor:pointer;font-weight:800;font-family:inherit}
 .tab.active{background:#141414;color:#fff;border-color:#141414}
+.tab .bdg{background:#b3261e;color:#fff;border-radius:99px;padding:0 8px;font-size:12px;margin-inline-start:4px}
 .panel{display:none;background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px}
 .panel.active{display:block}
 table{width:100%;border-collapse:collapse;font-size:14px}
 th,td{border:1px solid var(--line);padding:8px;text-align:start;vertical-align:middle}
 th{background:#141414;color:#fff}
-td input[type=text],td input[type=number]{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:13px}
+td input[type=text],td input[type=number],td select{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:13px}
 .prow img{width:46px;height:56px;object-fit:cover;border-radius:8px}
 .field{margin-bottom:14px}
 .field label{display:block;font-weight:800;margin-bottom:6px;font-size:14px}
@@ -28,45 +29,60 @@ td input[type=text],td input[type=number]{width:100%;padding:7px 9px;border:1px 
 .stats{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}
 .stat{background:#141414;color:#fff;border-radius:14px;padding:12px 20px;min-width:130px}
 .stat b{display:block;font-size:22px}.stat span{font-size:12px;color:#cfc9bc}
-.btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;align-items:center}
 .save{background:#141414;color:#fff;border:none;border-radius:12px;padding:13px 30px;font-weight:800;cursor:pointer;font-family:inherit;font-size:15px}
 .reset{background:#fff;border:1px solid #b3261e;color:#b3261e;border-radius:12px;padding:12px 20px;font-weight:800;cursor:pointer;font-family:inherit}
 .okmsg{color:#1c7a3d;font-weight:800;margin-top:10px}
-#gate{max-width:380px;margin:80px auto;text-align:center;background:#fff;border:1px solid var(--line);border-radius:18px;padding:36px 28px}
-#gate input{width:100%;padding:13px;border:1px solid var(--line);border-radius:12px;text-align:center;font-size:20px;letter-spacing:8px;margin:14px 0;font-family:inherit}
-#gate button{width:100%}
+#gate{max-width:400px;margin:80px auto;text-align:center;background:#fff;border:1px solid var(--line);border-radius:18px;padding:36px 28px}
+#gate input{width:100%;padding:13px;border:1px solid var(--line);border-radius:12px;margin:8px 0;font-family:inherit;font-size:15px}
+#gate button{width:100%;margin-top:8px}
 #dash{display:none}
+.st-new{background:#b3261e;color:#fff;border-radius:99px;padding:2px 10px;font-size:12px;font-weight:800}
+.st-preparing{background:#b97a1a;color:#fff;border-radius:99px;padding:2px 10px;font-size:12px;font-weight:800}
+.st-shipped{background:#1a5fb4;color:#fff;border-radius:99px;padding:2px 10px;font-size:12px;font-weight:800}
+.st-done{background:#1c7a3d;color:#fff;border-radius:99px;padding:2px 10px;font-size:12px;font-weight:800}
+.logrow td{font-size:13px}
+.acct{background:#faf9f7;border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:14px}
 </style>
 </head>
 <body>
-<div class="announce">لوحة تحكم VARNOTO — التعديلات تظهر على الموقع فوراً في نفس المتصفح</div>
+<div class="announce">لوحة تحكم VARNOTO — التعديلات تظهر لكل الزوار ☁</div>
 <header class="header"><div class="container header-in">
 <a class="logo" href="index.html"><img src="assets/logo.svg" alt="VARNOTO"></a>
-<div class="actions"><a class="lang-btn" style="text-decoration:none" href="index.html" target="_blank">👁 معاينة الموقع</a></div>
+<div class="actions"><a class="lang-btn" style="text-decoration:none" href="index.html" target="_blank">👁 معاينة الموقع</a><button class="lang-btn" id="logoutBtn" style="display:none">خروج</button></div>
 </div></header>
 
 <div id="gate">
 <h2>🔐 دخول الإدارة</h2>
-<p class="tiny">اكتب رمز الدخول (PIN)</p>
-<input id="pin" type="password" inputmode="numeric" maxlength="8" placeholder="••••">
-<button class="save" id="pinBtn">دخول</button>
+<p class="tiny" id="gateUser">حساب المدير فقط</p>
+<input id="em" type="email" dir="ltr" placeholder="email" autocomplete="username">
+<input id="pw" type="password" placeholder="كلمة السر" autocomplete="current-password">
+<button class="save" id="loginBtn">دخول</button>
 <p class="tiny" id="pinMsg"></p>
 </div>
 
 <div id="dash" class="admin">
 <h1>أهلاً بيك 👋</h1>
 <p class="tiny" id="syncState">☁ جاري فحص الاتصال...</p>
-<p class="tiny">تحكم كامل: المنتجات والأسعار والمخزون + النصوص + روابط التواصل + نسخة احتياطية.</p>
 <div class="stats">
 <div class="stat"><b id="stCount">–</b><span>منتج</span></div>
 <div class="stat"><b id="stStock">–</b><span>متاح في المخزون</span></div>
 <div class="stat"><b id="stAvg">–</b><span>متوسط السعر (جنيه)</span></div>
+<div class="stat"><b id="stOrders">–</b><span>طلب جديد</span></div>
 </div>
 <div class="tabs">
+<button class="tab" data-t="pOrders">🧾 الطلبات <span class="bdg" id="ordBdg" style="display:none">0</span></button>
 <button class="tab active" data-t="pProducts">📦 المنتجات</button>
 <button class="tab" data-t="pTexts">✏️ نصوص الموقع</button>
 <button class="tab" data-t="pContact">📞 التواصل</button>
-<button class="tab" data-t="pBackup">💾 نسخ احتياطي</button>
+<button class="tab" data-t="pLog">📜 سجل التغييرات</button>
+<button class="tab" data-t="pBackup">💾 نسخ + حساب</button>
+</div>
+
+<div class="panel" id="pOrders">
+<p class="tiny">الطلبات بتوصل لحظياً + صوت تنبيه. حدّث الحالة لكل طلب.</p>
+<table><thead><tr><th>#</th><th>التاريخ</th><th>العميل</th><th>الأصناف</th><th>الإجمالي</th><th>الحالة</th></tr></thead>
+<tbody id="ordRows"><tr><td colspan="6" class="tiny">جاري التحميل...</td></tr></tbody></table>
 </div>
 
 <div class="panel active" id="pProducts">
@@ -96,6 +112,11 @@ td input[type=text],td input[type=number]{width:100%;padding:7px 9px;border:1px 
 <div class="btnrow"><button class="save" id="saveContact">💾 حفظ التواصل</button><span class="okmsg" id="msgC"></span></div>
 </div>
 
+<div class="panel" id="pLog">
+<table><thead><tr><th>الوقت</th><th>المدير</th><th>الإجراء</th><th>التفاصيل</th></tr></thead>
+<tbody id="logRows"><tr><td colspan="4" class="tiny">جاري التحميل...</td></tr></tbody></table>
+</div>
+
 <div class="panel" id="pBackup">
 <p>حمّل نسخة من كل إعدادات المتجر، أو استرجعها على أي جهاز تاني.</p>
 <div class="btnrow">
@@ -103,12 +124,21 @@ td input[type=text],td input[type=number]{width:100%;padding:7px 9px;border:1px 
 <label class="save" style="background:#fff;color:#141414;border:1px solid #141414;cursor:pointer">⬆️ استرجاع نسخة<input id="impFile" type="file" accept=".json" hidden></label>
 <button class="reset" id="resetBtn">🗑 إعادة ضبط المصنع</button>
 </div>
-<p class="tiny">ملحوظة: الحفظ هنا في نفس المتصفح (localStorage). النسخة JSON هي اللي بتنقل الإعدادات لجهاز آخر.</p>
+<div class="acct">
+<b>🔑 حسابي</b>
+<p class="tiny" id="acctEmail"></p>
+<div class="row2">
+<div class="field"><label>كلمة سر جديدة</label><input id="npw" type="password" placeholder="••••••••"></div>
+<div class="field"><label>&nbsp;</label><button class="save" id="chPwBtn" style="width:100%">تغيير كلمة السر</button></div>
+</div>
+<p class="tiny">وضع الطوارئ (بدون سحابة، حفظ محلي فقط): افتح الداشبورد برابط ينتهي بـ <b>#local</b> + رمز <b>2026</b>.</p>
+</div>
 </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const PIN='2026', KEY='varnoto_store_v1';
+const KEY='varnoto_store_v1', EMERGENCY_PIN='2026';
 const DEFAULTS=[
  {id:1,cat:'tshirt',en:'Essential White Tee',ar:'تيشيرت أبيض أساسي',price:350,old:'',stock:true,img:'assets/p-tee-white.jpg'},
  {id:2,cat:'tshirt',en:'Essential Black Tee',ar:'تيشيرت أسود أساسي',price:350,old:450,stock:true,img:'assets/p-tee-black.jpg'},
@@ -124,39 +154,93 @@ const DEFAULTS=[
  {id:12,cat:'tailored',en:'Tailored Pants — Beige',ar:'بنطلون كلاسيك — بيج',price:850,old:'',stock:true,img:'assets/p-pants-beige.jpg'}
 ];
 const $=s=>document.querySelector(s);
-function load(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return{};}}
-function save(s){localStorage.setItem(KEY,JSON.stringify(s));pushRemote(s);}
 const SUPA_URL='https://xgokhpdhzafuluiqdtah.supabase.co', SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnb2tocGRoemFmdWx1aXFkdGFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5NjU0NDMsImV4cCI6MjEwNDU0MTQ0M30.2B-0GPvxh5KoXVM4jhN06hCt75LakazSC36bh637zQA';
 const supaOn=()=>SUPA_URL&&!SUPA_URL.startsWith('__');
+let SB=null, LOCAL_MODE=false;
+function sb(){ if(!SB&&window.supabase&&supaOn()) SB=window.supabase.createClient(SUPA_URL,SUPA_KEY); return SB; }
+async function H(){ try{ const c=sb(); if(c){ const r=await c.auth.getSession(); const t=r.data&&r.data.session&&r.data.session.access_token; if(t) return {apikey:SUPA_KEY,Authorization:'Bearer '+t}; } }catch(e){} return {apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY}; }
 function setSync(t){const e=$('#syncState');if(e)e.textContent=t;}
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return{};}}
+function save(s){localStorage.setItem(KEY,JSON.stringify(s));pushRemote(s);}
 async function pushRemote(s){
- if(!supaOn()){setSync('💾 حفظ محلي فقط (السحابة غير مربوطة بعد)');return;}
+ if(LOCAL_MODE){setSync('💾 حفظ محلي (وضع الطوارئ)');return;}
+ if(!supaOn()){setSync('💾 حفظ محلي فقط');return;}
  setSync('☁ جاري المزامنة مع كل الزوار...');
  try{
-  const r=await fetch(SUPA_URL+'/rest/v1/store_config?id=eq.1',{method:'PATCH',headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({data:s,updated_at:new Date().toISOString()})});
+  const h=await H();h['Content-Type']='application/json';h.Prefer='return=minimal';
+  const r=await fetch(SUPA_URL+'/rest/v1/store_config?id=eq.1',{method:'PATCH',headers:h,body:JSON.stringify({data:s,updated_at:new Date().toISOString()})});
   setSync(r.ok?'☁ متزامن — التعديلات ظاهرة لكل الزوار ✅':'⚠ تعذر المزامنة — محفوظ محلياً فقط');
  }catch(e){setSync('⚠ تعذر المزامنة — محفوظ محلياً فقط');}
 }
 async function syncFromCloud(){
- if(!supaOn()){setSync('💾 وضع محلي — اربط Supabase للمزامنة العامة');return;}
+ if(LOCAL_MODE){setSync('💾 وضع الطوارئ المحلي');return;}
+ if(!supaOn()){setSync('💾 وضع محلي');return;}
  setSync('☁ جاري التحميل من السحابة...');
  try{
-  const r=await fetch(SUPA_URL+'/rest/v1/store_config?id=eq.1&select=data',{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY}});
+  const h=await H();
+  const r=await fetch(SUPA_URL+'/rest/v1/store_config?id=eq.1&select=data',{headers:h});
   const j=await r.json();const d=j&&j[0]&&j[0].data;
   if(d&&(d.products||d.announce||d.hero||d.contact)){localStorage.setItem(KEY,JSON.stringify(d));fillAll();setSync('☁ متصل — التعديلات تظهر لكل الزوار ✅');}
   else setSync('☁ متصل — لا بيانات سحابية بعد، احفظ أول تعديل');
  }catch(e){setSync('⚠ تعذر الاتصال بالسحابة — شغال محلي');}
 }
+async function logAction(action,details){
+ if(LOCAL_MODE||!supaOn())return;
+ try{
+  const c=sb();const s=c?await c.auth.getSession():null;const em=s&&s.data&&s.data.session&&s.data.session.user&&s.data.session.user.email;
+  const h=await H();h['Content-Type']='application/json';h.Prefer='return=minimal';
+  await fetch(SUPA_URL+'/rest/v1/change_log',{method:'POST',headers:h,body:JSON.stringify({actor_email:em||'admin',action,details:details||{}})});
+ }catch(e){}
+ loadLog();
+}
 function fillAll(){renderRows();fillTexts();fillC();}
 function merged(){const s=load();const byId={};(s.products||[]).forEach(o=>{if(o&&o.id!=null)byId[o.id]=o;});return DEFAULTS.map(d=>Object.assign({},d,byId[d.id]||{}));}
 
-// gate
-if(sessionStorage.getItem('varnoto_admin')==='1'){$('#gate').style.display='none';$('#dash').style.display='block';syncFromCloud();}
-$('#pinBtn').onclick=()=>{if($('#pin').value===PIN){sessionStorage.setItem('varnoto_admin','1');$('#gate').style.display='none';$('#dash').style.display='block';syncFromCloud();}else{$('#pinMsg').textContent='رمز غلط، حاول تاني.';}};
-$('#pin').onkeydown=e=>{if(e.key==='Enter')$('#pinBtn').click();};
+// gate — email/password (Supabase Auth), emergency local via #local + PIN
+async function enterDash(email){
+ $('#gate').style.display='none';$('#dash').style.display='block';$('#logoutBtn').style.display='inline-block';
+ $('#acctEmail').textContent=email||'وضع الطوارئ المحلي';
+ syncFromCloud();loadOrders();loadLog();subscribeOrders();
+ if('Notification' in window&&Notification.permission==='default'){try{Notification.requestPermission();}catch(e){}}
+}
+(async function initGate(){
+ if(location.hash==='#local'){
+  $('#gateUser').textContent='وضع الطوارئ — حفظ محلي فقط';
+  $('#em').style.display='none';
+  $('#pw').placeholder='رمز الطوارئ';
+  $('#loginBtn').onclick=()=>{ if($('#pw').value===EMERGENCY_PIN){LOCAL_MODE=true;enterDash('');} else $('#pinMsg').textContent='رمز غلط.'; };
+  return;
+ }
+ $('#loginBtn').onclick=doLogin;
+ $('#pw').onkeydown=e=>{if(e.key==='Enter')doLogin();};
+ try{
+  const c=sb();
+  if(c){const r=await c.auth.getSession();const u=r.data&&r.data.session&&r.data.session.user;
+   if(u){enterDash(u.email);return;}}
+ }catch(e){}
+})();
+async function doLogin(){
+ const em=$('#em').value.trim(),pw=$('#pw').value;
+ if(!em||!pw){$('#pinMsg').textContent='اكتب الإيميل وكلمة السر.';return;}
+ $('#pinMsg').textContent='جاري الدخول...';
+ try{
+  const c=sb();
+  if(!c){$('#pinMsg').textContent='تعذر الاتصال. جرب وضع #local.';return;}
+  const r=await c.auth.signInWithPassword({email:em,password:pw});
+  if(r.error){$('#pinMsg').textContent='بيانات غلط، حاول تاني.';return;}
+  enterDash(r.data.user.email);
+ }catch(e){$('#pinMsg').textContent='تعذر الاتصال بالسحابة.';}
+}
+$('#logoutBtn').onclick=async()=>{try{const c=sb();if(c)await c.auth.signOut();}catch(e){}location.reload();};
+$('#chPwBtn').onclick=async()=>{
+ const v=$('#npw').value;if(!v||v.length<6){alert('كلمة السر 6 حروف على الأقل');return;}
+ try{const c=sb();const r=await c.auth.updateUser({password:v});
+  if(r.error){alert('فشل التغيير');}else{$('#npw').value='';alert('✅ اتغيرت كلمة السر');}
+ }catch(e){alert('تعذر الاتصال');}
+};
 
 // tabs
-document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===b.dataset.t));});
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===b.dataset.t));if(b.dataset.t==='pLog')loadLog();if(b.dataset.t==='pOrders')loadOrders();});
 
 // products
 function renderRows(){
@@ -177,22 +261,93 @@ $('#saveProducts').onclick=()=>{
  const arr=[...document.querySelectorAll('.prow')].map(tr=>{
   const o={id:Number(tr.dataset.id)};tr.querySelectorAll('[data-k]').forEach(inp=>{const k=inp.dataset.k;
    if(inp.type==='checkbox')o[k]=inp.checked;else if(k==='price')o[k]=Number(inp.value||0);else if(k==='old')o[k]=inp.value===''?'':Number(inp.value);else o[k]=inp.value.trim();});return o;});
- const s=load();s.products=arr;save(s);renderRows();$('#msgP').textContent='✅ اتحفظ — شوف الموقع';setTimeout(()=>$('#msgP').textContent='',2500);
+ const s=load();s.products=arr;save(s);renderRows();logAction('تعديل المنتجات',{count:arr.length});$('#msgP').textContent='✅ اتحفظ — شوف الموقع';setTimeout(()=>$('#msgP').textContent='',2500);
 };
 
 // texts
 function fillTexts(){const s=load();$('#ann_ar').value=(s.announce&&s.announce.ar)||'شحن مجاني للطلبات فوق 1999 جنيه 🚚';$('#ann_en').value=(s.announce&&s.announce.en)||'Free shipping on orders over 1999 EGP 🚚';$('#ht_ar').value=(s.hero&&s.hero.title_ar)||'أساسيات تقيلة، معمولة لمصر.';$('#ht_en').value=(s.hero&&s.hero.title_en)||'Heavyweight essentials, made for Egypt.';$('#hs_ar').value=(s.hero&&s.hero.sub_ar)||'تيشيرتات، قمصان لينن، جينز وايد ليج وسويت بانتس. قصّات نضيفة وأسعار واضحة بالجنيه.';$('#hs_en').value=(s.hero&&s.hero.sub_en)||'T-shirts, linen shirts, wide-leg jeans & sweatpants. Clean cuts, honest prices in EGP.';}
 fillTexts();
-$('#saveTexts').onclick=()=>{const s=load();s.announce={ar:$('#ann_ar').value,en:$('#ann_en').value};s.hero={title_ar:$('#ht_ar').value,title_en:$('#ht_en').value,sub_ar:$('#hs_ar').value,sub_en:$('#hs_en').value};save(s);$('#msgT').textContent='✅ اتحفظ';setTimeout(()=>$('#msgT').textContent='',2500);};
+$('#saveTexts').onclick=()=>{const s=load();s.announce={ar:$('#ann_ar').value,en:$('#ann_en').value};s.hero={title_ar:$('#ht_ar').value,title_en:$('#ht_en').value,sub_ar:$('#hs_ar').value,sub_en:$('#hs_en').value};save(s);logAction('تعديل النصوص',{});$('#msgT').textContent='✅ اتحفظ';setTimeout(()=>$('#msgT').textContent='',2500);};
 
 // contact
 function fillC(){const s=load();$('#c_wa').value=(s.contact&&s.contact.whatsapp)||'201000000000';$('#c_ig').value=(s.contact&&s.contact.instagram)||'';$('#c_tt').value=(s.contact&&s.contact.tiktok)||'';}
 fillC();
-$('#saveContact').onclick=()=>{const s=load();s.contact={whatsapp:$('#c_wa').value.trim(),instagram:$('#c_ig').value.trim(),tiktok:$('#c_tt').value.trim()};save(s);$('#msgC').textContent='✅ اتحفظ';setTimeout(()=>$('#msgC').textContent='',2500);};
+$('#saveContact').onclick=()=>{const s=load();s.contact={whatsapp:$('#c_wa').value.trim(),instagram:$('#c_ig').value.trim(),tiktok:$('#c_tt').value.trim()};save(s);logAction('تعديل التواصل',{});$('#msgC').textContent='✅ اتحفظ';setTimeout(()=>$('#msgC').textContent='',2500);};
+
+// orders
+const ST_AR={new:'جديد',preparing:'يتجهز',shipped:'اتشحن',done:'تم ✅'};
+function fmtDate(iso){try{const d=new Date(iso);return d.toLocaleString('ar-EG',{dateStyle:'short',timeStyle:'short'});}catch(e){return iso||'';}}
+function itemsTxt(items){try{return (items||[]).map(i=>(i.name||'')+' ×'+(i.q||1)).join('، ');}catch(e){return '';}}
+async function loadOrders(){
+ if(LOCAL_MODE){$('#ordRows').innerHTML='<tr><td colspan="6" class="tiny">غير متاح في وضع الطوارئ</td></tr>';return;}
+ try{
+  const h=await H();
+  const r=await fetch(SUPA_URL+'/rest/v1/orders?select=*&order=created_at.desc&limit=100',{headers:h});
+  if(r.status===401||r.status===403){$('#ordRows').innerHTML='<tr><td colspan="6" class="tiny">سجل دخول المدير لعرض الطلبات</td></tr>';return;}
+  const rows=await r.json();renderOrders(rows||[]);
+ }catch(e){$('#ordRows').innerHTML='<tr><td colspan="6" class="tiny">تعذر التحميل</td></tr>';}
+}
+function renderOrders(rows){
+ const news=rows.filter(o=>o.status==='new').length;
+ $('#stOrders').textContent=news;
+ const b=$('#ordBdg');b.style.display=news?'inline-block':'none';b.textContent=news;
+ $('#ordRows').innerHTML=rows.length?rows.map(o=>`<tr data-oid="${o.id}">
+  <td><b>#${o.id}</b></td><td style="font-size:12px">${fmtDate(o.created_at)}</td>
+  <td>${(o.customer_name||'—')}<br><span class="tiny" dir="ltr">${(o.customer_phone||'')}</span></td>
+  <td style="font-size:12px">${itemsTxt(o.items)}</td><td><b>${o.total} EGP</b></td>
+  <td><span class="st-${o.status||'new'}">${ST_AR[o.status]||o.status}</span><br>
+  <select data-st="${o.id}" style="margin-top:6px"><option value="">تغيير ←</option><option value="preparing">يتجهز</option><option value="shipped">اتشحن</option><option value="done">تم ✅</option></select></td></tr>`).join('')
+  :'<tr><td colspan="6" class="tiny">لا طلبات بعد — أول طلب هيظهر هنا لحظياً مع تنبيه صوتي.</td></tr>';
+ document.querySelectorAll('[data-st]').forEach(sel=>sel.onchange=()=>{if(sel.value)setStatus(Number(sel.dataset.st),sel.value);});
+}
+async function setStatus(id,st){
+ try{
+  const h=await H();h['Content-Type']='application/json';h.Prefer='return=minimal';
+  await fetch(SUPA_URL+'/rest/v1/orders?id=eq.'+id,{method:'PATCH',headers:h,body:JSON.stringify({status:st})});
+  logAction('تغيير حالة طلب',{id,status:st});loadOrders();
+ }catch(e){alert('تعذر التحديث');}
+}
+let knownIds=new Set(), firstLoad=true;
+function beep(){try{const A=new (window.AudioContext||window.webkitAudioContext)();const o=A.createOscillator(),g=A.createGain();o.connect(g);g.connect(A.destination);o.frequency.value=880;g.gain.value=.12;o.start();[0,.18,.36].forEach((t,i)=>{o.frequency.setValueAtTime([880,660,990][i],A.currentTime+t);});o.stop(A.currentTime+.6);}catch(e){}}
+function subscribeOrders(){
+ try{
+  const c=sb();if(!c)return;
+  c.channel('orders-live').on('postgres_changes',{event:'INSERT',schema:'public',table:'orders'},p=>{
+   const o=p.new;if(!o||knownIds.has(o.id))return;knownIds.add(o.id);
+   beep();
+   if('Notification' in window&&Notification.permission==='granted'){try{new Notification('🧾 طلب جديد #'+o.id,{body:(o.total||'')+' EGP'});}catch(e){}}
+   loadOrders();
+  }).subscribe();
+ }catch(e){}
+ loadOrders().then&&null;
+ setInterval(async()=>{ // fallback poll every 30s
+  try{
+   const h=await H();
+   const r=await fetch(SUPA_URL+'/rest/v1/orders?select=id&order=created_at.desc&limit=20',{headers:h});
+   const rows=await r.json();let fresh=false;
+   (rows||[]).forEach(o=>{if(!knownIds.has(o.id)){knownIds.add(o.id);fresh=true;}});
+   if(fresh&&!firstLoad){beep();loadOrders();}
+   firstLoad=false;
+  }catch(e){}
+ },30000);
+}
+
+// change log
+async function loadLog(){
+ if(LOCAL_MODE){$('#logRows').innerHTML='<tr><td colspan="4" class="tiny">غير متاح في وضع الطوارئ</td></tr>';return;}
+ try{
+  const h=await H();
+  const r=await fetch(SUPA_URL+'/rest/v1/change_log?select=*&order=created_at.desc&limit=50',{headers:h});
+  if(!r.ok){$('#logRows').innerHTML='<tr><td colspan="4" class="tiny">سجل دخول المدير لعرض السجل</td></tr>';return;}
+  const rows=await r.json();
+  $('#logRows').innerHTML=rows.length?rows.map(l=>`<tr class="logrow"><td style="font-size:12px">${fmtDate(l.created_at)}</td><td dir="ltr" style="font-size:12px">${l.actor_email||''}</td><td><b>${l.action||''}</b></td><td style="font-size:12px">${JSON.stringify(l.details||{})}</td></tr>`).join('')
+   :'<tr><td colspan="4" class="tiny">لا تغييرات مسجلة بعد.</td></tr>';
+ }catch(e){$('#logRows').innerHTML='<tr><td colspan="4" class="tiny">تعذر التحميل</td></tr>';}
+}
 
 // backup
 $('#expBtn').onclick=()=>{const blob=new Blob([localStorage.getItem(KEY)||'{}'],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='varnoto-store-backup.json';a.click();};
-$('#impFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(r.result);save(o);location.reload();}catch(err){alert('ملف غير صالح');}};r.readAsText(f);};
+$('#impFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(r.result);save(o);logAction('استرجاع نسخة',{});location.reload();}catch(err){alert('ملف غير صالح');}};r.readAsText(f);};
 $('#resetBtn').onclick=()=>{if(confirm('متأكد؟ هيرجع كل حاجة للوضع الأصلي.')){localStorage.removeItem(KEY);location.reload();}};
 
 renderRows();

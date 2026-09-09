@@ -93,6 +93,8 @@ body{font-family:'Cairo','Inter',system-ui,sans-serif;background:var(--bg);color
 .qty{display:flex;gap:8px;align-items:center;margin-top:6px}
 .qty button{width:26px;height:26px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer}
 .cart-foot{padding:16px 18px;border-top:1px solid var(--line)}
+.cust{display:grid;gap:8px;margin-bottom:12px}
+.cust input{padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:14px;width:100%}
 .total{display:flex;justify-content:space-between;font-size:17px}
 .modal{position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.5);z-index:80;padding:16px}
 .modal.show{display:grid}

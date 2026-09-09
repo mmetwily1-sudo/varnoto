@@ -205,11 +205,25 @@ $('#burger').onclick = ()=> $('#nav').classList.toggle('open');
 $('#searchBtn').onclick = ()=> $('#searchBar').classList.toggle('open');
 $('#searchInput').oninput = (e)=>{ query=e.target.value; renderProducts(); };
 document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{filter=c.dataset.f;document.querySelectorAll('.chip').forEach(x=>x.classList.toggle('active',x===c));renderProducts();});
-$('#checkoutBtn').onclick = ()=>{
+$('#checkoutBtn').onclick = async ()=>{
   if(!cart.length) return alert(t('Cart is empty','السلة فاضية'));
   const total = cart.reduce((a,r)=>a+PRODUCTS.find(x=>x.id===r.id).price*r.q,0);
-  const msg = encodeURIComponent((LANG==='ar'?'طلب جديد VARNOTO:%0A':'New VARNOTO order:%0A')+cart.map(r=>{const p=PRODUCTS.find(x=>x.id===r.id);return `${p.en} x${r.q}`}).join('%0A')+`%0ATotal: ${total} EGP`);
-  window.open((window.VARNOTO_WA||'https://wa.me/201000000000')+'?text='+msg,'_blank');
+  const items = cart.map(r=>{const p=PRODUCTS.find(x=>x.id===r.id);return {id:p.id,name:p.en,q:r.q,price:p.price};});
+  const cname=($('#custName')&&$('#custName').value||'').trim();
+  const cphone=($('#custPhone')&&$('#custPhone').value||'').trim();
+  let orderId=null;
+  if(supaOn()){
+    try{
+      const r=await fetch(SUPABASE_URL+'/rest/v1/rpc/place_order',{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_name:cname||null,p_phone:cphone||null,p_items:items,p_total:total})});
+      if(r.ok){const j=await r.json(); orderId=(typeof j==='number')?j:(j&&j[0]);}
+    }catch(e){}
+  }
+  let txt=(LANG==='ar'?'طلب جديد VARNOTO:':'New VARNOTO order:')+'\n'+items.map(i=>`${i.name} x${i.q}`).join('\n')+`\nTotal: ${total} EGP`;
+  if(orderId) txt+='\nOrder #'+orderId;
+  if(cname) txt+='\nName: '+cname;
+  if(cphone) txt+='\nPhone: '+cphone;
+  window.open((window.VARNOTO_WA||'https://wa.me/201000000000')+'?text='+encodeURIComponent(txt),'_blank');
+  if(orderId){ cart=[]; saveCart(); closeCart(); alert(t('Order #'+orderId+' received! We will call you to confirm.','طلبك #'+orderId+' وصل! هنتصل بيك للتأكيد.')); }
 };
 $('#newsForm').onsubmit = (e)=>{ e.preventDefault(); $('#newsMsg').textContent = t('Thanks! Check your email for 10% off.','شكراً! تابع إيميلك لخصم 10%.'); e.target.reset(); };
 
