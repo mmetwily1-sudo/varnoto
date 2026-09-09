@@ -92,6 +92,8 @@ td input[type=text],td input[type=number],td select{width:100%;padding:7px 9px;b
 <button class="tab" data-t="pProducts">📦 المنتجات</button>
 <button class="tab" data-t="pCoupons">🎟 الكوبونات</button>
 <button class="tab" data-t="pReviews">⭐ التقييمات <span class="bdg" id="revBdg" style="display:none">0</span></button>
+<button class="tab" data-t="pShip">🚚 الشحن والدفع</button>
+<button class="tab" data-t="pStaff">👥 الطاقم</button>
 <button class="tab" data-t="pSections">🗂 الأقسام</button>
 <button class="tab" data-t="pTheme">🎨 الثيم والواجهة</button>
 <button class="tab" data-t="pHF">🧱 الهيدر والفوتر</button>
@@ -130,6 +132,16 @@ td input[type=text],td input[type=number],td select{width:100%;padding:7px 9px;b
 
 <div class="panel" id="pOrders">
 <p class="tiny">الطلبات بتوصل لحظياً + صوت تنبيه. حدّث الحالة لكل طلب.</p>
+<details style="margin-bottom:12px"><summary style="cursor:pointer;font-weight:800">📲 إشعارات واتساب للطلبات الجديدة (تحتاج Ultramsg)</summary>
+<div class="row3" style="margin-top:10px">
+<div class="field"><label>الحالة</label><select id="nt_on"><option value="0">متوقفة</option><option value="1">شغالة</option></select></div>
+<div class="field"><label>Ultramsg Token</label><input id="nt_tok" type="text" dir="ltr"></div>
+<div class="field"><label>Instance ID</label><input id="nt_ins" type="text" dir="ltr"></div>
+</div>
+<div class="field"><label>رقمك لاستقبال التنبيهات (بالكود الدولي بدون +)</label><input id="nt_to" type="text" dir="ltr" placeholder="201xxxxxxxxx"></div>
+<div class="btnrow"><button class="ghostb" id="ntSave">حفظ الإعدادات</button><button class="ghostb" id="ntTest">📤 تجربة</button><span class="okmsg" id="ntMsg"></span></div>
+<p class="tiny">سجّل مجاناً في ultramsg.com واربط رقمك، والصق الـ Token والـ Instance هنا — التنبيهات هتتبعت تلقائياً من المتصفح المفتوح عليه الداشبورد.</p>
+</details>
 <table><thead><tr><th>#</th><th>التاريخ</th><th>العميل</th><th>الأصناف</th><th>الإجمالي</th><th>الحالة</th></tr></thead>
 <tbody id="ordRows"><tr><td colspan="6" class="tiny">جاري التحميل...</td></tr></tbody></table>
 </div>
@@ -155,6 +167,34 @@ td input[type=text],td input[type=number],td select{width:100%;padding:7px 9px;b
 <table><thead><tr><th>المنتج</th><th>الاسم</th><th>★</th><th>التعليق</th><th></th></tr></thead><tbody id="revPend"></tbody></table>
 <h3 style="margin-top:18px">✅ معتمدة</h3>
 <table><thead><tr><th>المنتج</th><th>الاسم</th><th>★</th><th>التعليق</th><th></th></tr></thead><tbody id="revOk"></tbody></table>
+</div>
+
+<div class="panel" id="pShip">
+<h3>🚚 مناطق الشحن</h3>
+<p class="tiny">الشحن مجاني فوق حد كل منطقة. التغييرات تظهر في سلة الموقع فوراً.</p>
+<table><thead><tr><th>ID</th><th>AR</th><th>EN</th><th>السعر</th><th>المدة</th><th>مجاني فوق</th><th>نشطة؟</th><th></th></tr></thead><tbody id="zoneRows"></tbody></table>
+<div class="btnrow"><button class="ghostb" id="addZoneBtn">＋ منطقة</button><button class="save" id="saveZones">💾 حفظ المناطق</button><span class="okmsg" id="msgZ"></span></div>
+<h3 style="margin-top:20px">💳 طرق الدفع</h3>
+<div class="field"><label><input type="checkbox" id="pay_cod" checked> الدفع عند الاستلام</label></div>
+<div class="row2">
+<div class="field"><label><input type="checkbox" id="pay_ins"> انستاباي</label><input id="pay_ins_n" type="text" dir="ltr" placeholder="رقم انستاباي"></div>
+<div class="field"><label><input type="checkbox" id="pay_vod"> فودافون كاش</label><input id="pay_vod_n" type="text" dir="ltr" placeholder="رقم فودافون كاش"></div>
+</div>
+<div class="btnrow"><button class="save" id="savePay">💾 حفظ الدفع</button><span class="okmsg" id="msgPay"></span></div>
+</div>
+
+<div class="panel" id="pStaff">
+<h3>👥 حسابات الطاقم</h3>
+<p>الموظف بيدخل بنفس صفحة الدخول (إيميل + باسورد) وبيشوف <b>الرئيسية والطلبات فقط</b>: يقدر يغيّر حالة الطلب، لكن ميقدرش يعدّل المنتجات أو الأسعار أو الإعدادات.</p>
+<div class="acct">
+<b>➕ إضافة موظف جديد</b>
+<p class="tiny">ابعت إيميل الموظف في الشات وهيتم إنشاء حسابه بدور طاقم فوراً، وبعدها غيّر باسورده من تبويب النسخ والحساب.</p>
+</div>
+<table style="margin-top:12px"><thead><tr><th>الدور</th><th>الطلبات</th><th>المنتجات/الإعدادات</th><th>الإحصائيات</th></tr></thead>
+<tbody>
+<tr><td><b>مدير (admin)</b></td><td>✅ كامل</td><td>✅ كامل</td><td>✅</td></tr>
+<tr><td><b>طاقم (staff)</b></td><td>عرض + تغيير الحالة</td><td>❌</td><td>✅ عرض</td></tr>
+</tbody></table>
 </div>
 
 <div class="panel" id="pProducts">
@@ -187,6 +227,12 @@ td input[type=text],td input[type=number],td select{width:100%;padding:7px 9px;b
 </div>
 <div class="field"><label>صورة البنر (اتركها فاضية للصورة الحالية)</label>
 <div class="row2"><select id="th_hero_pick"></select><input id="th_hero" type="text" dir="ltr" placeholder="assets/hero.jpg أو رابط"></div></div>
+<div class="field"><label><input type="checkbox" id="pr_show"> شريط عرض متحرك (عدّاد تنازلي)</label></div>
+<div class="row2">
+<div class="field"><label>نص العرض (عربي)</label><input id="pr_ar" type="text"></div>
+<div class="field"><label>Promo text (English)</label><input id="pr_en" type="text" dir="ltr"></div>
+</div>
+<div class="field"><label>ينتهي العرض في</label><input id="pr_end" type="datetime-local" dir="ltr"></div>
 <div class="row2">
 <div class="field"><label>عنوان المجموعات (عربي)</label><input id="hc_ar" type="text"></div>
 <div class="field"><label>Collections heading (English)</label><input id="hc_en" type="text" dir="ltr"></div>
@@ -287,6 +333,10 @@ td input[type=text],td input[type=number],td select{width:100%;padding:7px 9px;b
 <div class="field"><label>الصور (سطر لكل صورة — الأولى هي الرئيسية)</label><textarea id="e_imgs" dir="ltr" style="min-height:70px"></textarea><p class="small">صور الموقع: assets/p-tee-white.jpg ... أو رابط كامل https://...</p></div>
 <div class="field"><label>SEO Title (عنوان المنتج في جوجل)</label><input id="e_st" type="text" dir="ltr"></div>
 <div class="field"><label>SEO Description</label><textarea id="e_sd" dir="ltr" style="min-height:60px"></textarea></div>
+<div class="row2">
+<div class="field"><label>العرض يبدأ من (فاضي = فوراً)</label><input id="e_sf" type="date" dir="ltr"></div>
+<div class="field"><label>العرض ينتهي في (فاضي = مفتوح)</label><input id="e_sto" type="date" dir="ltr"></div>
+</div>
 <div class="btnrow"><button class="save" id="edSave">💾 حفظ المنتج</button><button class="ghostb" id="edCopy">📋 نسخ رابط المنتج</button><button class="ghostb" id="edClose">إغلاق</button><span class="okmsg" id="edMsg"></span></div>
 </div></div>
 
@@ -369,9 +419,19 @@ function fillAll(){renderRows();fillTheme();fillHF();fillPg();fillSEO();fillC();
 async function enterDash(email){
  $('#gate').style.display='none';$('#dash').style.display='block';$('#logoutBtn').style.display='inline-block';
  $('#acctEmail').textContent=email||'وضع الطوارئ المحلي';
- syncFromCloud();loadHome();loadOrders();loadLog();subscribeOrders();
+ try{
+  const c=sb();
+  if(c&&email){const r=await c.auth.getSession();const u=r.data&&r.data.session&&r.data.session.user;
+   ROLE=(u&&u.user_metadata&&u.user_metadata.role)||'admin';
+   if(ROLE!=='admin'){
+    document.querySelectorAll('.tab').forEach(b=>{if(b.dataset.t!=='pHome'&&b.dataset.t!=='pOrders')b.style.display='none';});
+    setSync('👤 وضع طاقم — عرض الطلبات وتغيير حالتها فقط');
+   }}
+ }catch(e){}
+ syncFromCloud();loadHome();loadOrders();loadLog();subscribeOrders();loadZonesAdmin();ntFill();
  if('Notification' in window&&Notification.permission==='default'){try{Notification.requestPermission();}catch(e){}}
 }
+let ROLE='admin';
 (function initGate(){
  if(location.hash==='#local'){
   $('#gateUser').textContent='وضع الطوارئ — حفظ محلي فقط';
@@ -401,9 +461,7 @@ $('#chPwBtn').onclick=async()=>{
   if(r.error){alert('فشل التغيير');}else{$('#npw').value='';alert('✅ اتغيرت كلمة السر');}
  }catch(e){alert('تعذر الاتصال');}
 };
-
-// tabs
-document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===b.dataset.t));if(b.dataset.t==='pLog')loadLog();if(b.dataset.t==='pOrders')loadOrders();if(b.dataset.t==='pCoupons')loadCoupons();if(b.dataset.t==='pReviews')loadReviews();if(b.dataset.t==='pHome')loadHome();});
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===b.dataset.t));if(b.dataset.t==='pLog')loadLog();if(b.dataset.t==='pOrders')loadOrders();if(b.dataset.t==='pCoupons')loadCoupons();if(b.dataset.t==='pReviews')loadReviews();if(b.dataset.t==='pHome')loadHome();if(b.dataset.t==='pShip')loadZonesAdmin();});
 
 // products
 function renderRows(){
@@ -431,6 +489,7 @@ window.openEditor=function(id){
  $('#e_den').value=p.desc_en||'';$('#e_dar').value=p.desc_ar||'';
  $('#e_imgs').value=((p.imgs&&p.imgs.length?p.imgs:(p.img?[p.img]:[]))||[]).join('\n');
  $('#e_st').value=p.seo_title||'';$('#e_sd').value=p.seo_desc||'';
+ $('#e_sf').value=(p.sale_from||'').slice(0,10);$('#e_sto').value=(p.sale_to||'').slice(0,10);
  $('#edMsg').textContent='';$('#editor').classList.add('show');
 };
 window.delProduct=function(id){
@@ -454,6 +513,7 @@ $('#edSave').onclick=()=>{
   price:Number($('#e_price').value||0),old:$('#e_old').value===''?'':Number($('#e_old').value),
   stock:$('#e_stock').value==='1',qty:$('#e_qty').value===''?'':Number($('#e_qty').value),cost:$('#e_cost').value===''?'':Number($('#e_cost').value),
   weight:$('#e_weight').value.trim(),desc_en:$('#e_den').value.trim(),desc_ar:$('#e_dar').value.trim(),
+  sale_from:$('#e_sf').value||'',sale_to:$('#e_sto').value||'',
   seo_title:$('#e_st').value.trim(),seo_desc:$('#e_sd').value.trim(),imgs};
  o.img=imgs[0]||'';
  if(!/^\d+$/.test(String(EDIT_ID))) o.id=EDIT_ID;
@@ -511,6 +571,9 @@ function fillTheme(){
  const hd=th.headings||{};
  $('#hc_ar').value=hd.col_ar||'تصفّح المجموعة';$('#hc_en').value=hd.col_en||'Browse the Collection';
  $('#hb_ar').value=hd.best_ar||'الأكثر مبيعاً';$('#hb_en').value=hd.best_en||'Best Selling';
+ const pr=th.promo||{};
+ $('#pr_show').checked=!!pr.show;$('#pr_ar').value=pr.text_ar||'';$('#pr_en').value=pr.text_en||'';
+ $('#pr_end').value=pr.ends_at?(String(pr.ends_at).slice(0,16).replace(' ','T')):'';
  const sh=th.show||{};
  $('#sh_col').checked=sh.collections!==false;$('#sh_about').checked=sh.about!==false;$('#sh_contact').checked=sh.contact!==false;
 }
@@ -522,6 +585,7 @@ $('#saveTheme').onclick=()=>{
   hero:{title_ar:$('#ht_ar').value,title_en:$('#ht_en').value,sub_ar:$('#hs_ar').value,sub_en:$('#hs_en').value,img:$('#th_hero').value.trim()},
   hero_img:$('#th_hero').value.trim(),
   headings:{col_ar:$('#hc_ar').value,col_en:$('#hc_en').value,best_ar:$('#hb_ar').value,best_en:$('#hb_en').value},
+  promo:{show:$('#pr_show').checked,text_ar:$('#pr_ar').value,text_en:$('#pr_en').value,ends_at:$('#pr_end').value||null},
   show:{collections:$('#sh_col').checked,about:$('#sh_about').checked,contact:$('#sh_contact').checked}};
  save(s);logAction('تعديل الثيم',{});
  $('#msgTh').textContent='✅ اتحفظ';setTimeout(()=>$('#msgTh').textContent='',2500);
@@ -679,8 +743,9 @@ window.printOrder=function(id){
 };
 async function setStatus(id,st){
  try{
-  const h=await H();h['Content-Type']='application/json';h.Prefer='return=minimal';
-  await fetch(SUPA_URL+'/rest/v1/orders?id=eq.'+id,{method:'PATCH',headers:h,body:JSON.stringify({status:st})});
+  const h=await H();h['Content-Type']='application/json';
+  const r=await fetch(SUPA_URL+'/rest/v1/rpc/set_order_status',{method:'POST',headers:h,body:JSON.stringify({p_id:id,p_status:st})});
+  if(!r.ok){alert('تعذر التحديث');return;}
   logAction('تغيير حالة طلب',{id,status:st});loadOrders();
  }catch(e){alert('تعذر التحديث');}
 }
@@ -691,7 +756,7 @@ function subscribeOrders(){
   const c=sb();if(!c)return;
   c.channel('orders-live').on('postgres_changes',{event:'INSERT',schema:'public',table:'orders'},p=>{
    const o=p.new;if(!o||knownIds.has(o.id))return;knownIds.add(o.id);
-   beep();
+   beep();notifyOrder(o);
    if('Notification' in window&&Notification.permission==='granted'){try{new Notification('🧾 طلب جديد #'+o.id,{body:(o.total||'')+' EGP'});}catch(e){}}
    loadOrders();
   }).subscribe();
@@ -789,6 +854,66 @@ window.delReview=async id=>{
  try{const h=await H();await fetch(SUPA_URL+'/rest/v1/reviews?id=eq.'+id,{method:'DELETE',headers:h});
   logAction('حذف تقييم',{id});loadReviews();}catch(e){alert('تعذر الحذف');}
 };
+
+// shipping zones + payment
+let ORIG_ZONES=[];
+async function loadZonesAdmin(){
+ if(LOCAL_MODE)return;
+ try{
+  const h=await H();
+  const r=await fetch(SUPA_URL+'/rest/v1/shipping_zones?select=*&order=id',{headers:h});
+  if(!r.ok)return;
+  const rows=await r.json();ORIG_ZONES=rows.map(z=>z.id);
+  $('#zoneRows').innerHTML=rows.map(z=>`<tr data-id="${z.id}">
+   <td><input type="text" data-k="id" value="${z.id}" dir="ltr"></td>
+   <td><input type="text" data-k="name_ar" value="${(z.name_ar||'').replace(/"/g,'&quot;')}"></td>
+   <td><input type="text" data-k="name_en" value="${(z.name_en||'').replace(/"/g,'&quot;')}"></td>
+   <td><input type="number" data-k="fee" value="${z.fee||0}" min="0"></td>
+   <td><input type="text" data-k="days" value="${(z.days||'').replace(/"/g,'&quot;')}"></td>
+   <td><input type="number" data-k="free_over" value="${z.free_over!=null?z.free_over:1999}" min="0"></td>
+   <td style="text-align:center"><input type="checkbox" data-k="active" ${z.active!==false?'checked':''} style="width:20px;height:20px"></td>
+   <td><button class="del" data-zdel="${z.id}">🗑</button></td></tr>`).join('');
+  document.querySelectorAll('[data-zdel]').forEach(b=>b.onclick=()=>{b.closest('tr').remove();});
+ }catch(e){}
+ const s=load(),pay=s.payment||{};
+ $('#pay_cod').checked=!pay.cod||pay.cod.on!==false;
+ $('#pay_ins').checked=!!(pay.instapay&&pay.instapay.on);$('#pay_ins_n').value=(pay.instapay&&pay.instapay.number)||'';
+ $('#pay_vod').checked=!!(pay.vodafone&&pay.vodafone.on);$('#pay_vod_n').value=(pay.vodafone&&pay.vodafone.number)||'';
+}
+$('#addZoneBtn').onclick=()=>{$('#zoneRows').insertAdjacentHTML('beforeend','<tr><td><input type="text" data-k="id" value="zone'+Date.now().toString(36)+'" dir="ltr"></td><td><input type="text" data-k="ar" value="" placeholder="AR"></td><td><input type="text" data-k="name_en" value="" placeholder="EN"></td><td><input type="number" data-k="fee" value="60" min="0"></td><td><input type="text" data-k="days" value="2-4"></td><td><input type="number" data-k="free_over" value="1999" min="0"></td><td style="text-align:center"><input type="checkbox" data-k="active" checked style="width:20px;height:20px"></td><td><button class="del" onclick="this.closest(\'tr\').remove()">🗑</button></td></tr>');};
+$('#saveZones').onclick=async()=>{
+ const arr=[...document.querySelectorAll('#zoneRows tr')].map(tr=>{const o={};tr.querySelectorAll('[data-k]').forEach(i=>{const k=i.dataset.k;o[k]=i.type==='checkbox'?i.checked:(k==='fee'||k==='free_over'?Number(i.value||0):i.value.trim());});return o;}).filter(z=>z.id);
+ try{
+  const h=await H();h['Content-Type']='application/json';
+  for(const z of arr){await fetch(SUPA_URL+'/rest/v1/shipping_zones?on_conflict=id',{method:'POST',headers:Object.assign(h,{Prefer:'resolution=merge-duplicates,return=minimal'}),body:JSON.stringify(z)});}
+  for(const old of ORIG_ZONES){if(!arr.some(z=>String(z.id)===String(old)))await fetch(SUPA_URL+'/rest/v1/shipping_zones?id=eq.'+encodeURIComponent(old),{method:'DELETE',headers:h});}
+  logAction('تعديل مناطق الشحن',{count:arr.length});loadZonesAdmin();
+  $('#msgZ').textContent='✅ اتحفظ';setTimeout(()=>$('#msgZ').textContent='',2500);
+ }catch(e){alert('تعذر الحفظ');}
+};
+$('#savePay').onclick=()=>{
+ const s=load();
+ s.payment={cod:{on:$('#pay_cod').checked},instapay:{on:$('#pay_ins').checked,number:$('#pay_ins_n').value.trim()},vodafone:{on:$('#pay_vod').checked,number:$('#pay_vod_n').value.trim()}};
+ save(s);logAction('تعديل طرق الدفع',{});
+ $('#msgPay').textContent='✅ اتحفظ';setTimeout(()=>$('#msgPay').textContent='',2500);
+};
+
+// whatsapp notify (per-device settings, secrets never touch the cloud)
+function ntGet(){try{return JSON.parse(localStorage.getItem('varnoto_notify'))||{};}catch(e){return{};}}
+function ntFill(){const n=ntGet();$('#nt_on').value=n.on?'1':'0';$('#nt_tok').value=n.tok||'';$('#nt_ins').value=n.ins||'';$('#nt_to').value=n.to||'';}
+$('#ntSave').onclick=()=>{localStorage.setItem('varnoto_notify',JSON.stringify({on:$('#nt_on').value==='1',tok:$('#nt_tok').value.trim(),ins:$('#nt_ins').value.trim(),to:$('#nt_to').value.trim()}));$('#ntMsg').textContent='✅ اتحفظ على هذا الجهاز';setTimeout(()=>$('#ntMsg').textContent='',2500);};
+async function ntSend(text){
+ const n=ntGet();if(!n.on||!n.tok||!n.ins||!n.to)return false;
+ try{
+  const r=await fetch('https://api.ultramsg.com/'+encodeURIComponent(n.ins)+'/messages/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:n.tok,to:n.to,body:text})});
+  return r.ok;
+ }catch(e){return false;}
+}
+$('#ntTest').onclick=async()=>{$('#ntMsg').textContent='جاري الإرسال...';const ok=await ntSend('✅ تجربة تنبيهات VARNOTO — الإعداد شغال');$('#ntMsg').textContent=ok?'✅ وصلت الرسالة':'❌ فشل — راجع البيانات';};
+function notifyOrder(o){
+ const n=ntGet();if(!n.on)return;
+ ntSend('🧾 طلب جديد #'+o.id+' — '+(o.total||'')+' EGP\n'+(o.customer_name||'')+' — '+(o.customer_phone||''));
+}
 
 // backup
 $('#expBtn').onclick=()=>{const blob=new Blob([localStorage.getItem(KEY)||'{}'],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='varnoto-store-backup.json';a.click();};

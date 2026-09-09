@@ -15,6 +15,9 @@
 <meta name="twitter:card" content="summary_large_image">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"ClothingStore","name":"VARNOTO","slogan":"Built for the Bold","address":{"@type":"PostalAddress","addressLocality":"Cairo","addressCountry":"EG"},"currenciesAccepted":"EGP","paymentAccepted":"Cash on Delivery"}</script>
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#141414">
 <link rel="stylesheet" href="style.css?v=2">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -49,6 +52,7 @@
 <section class="hero" id="home">
   <div class="hero-bg"></div>
   <div class="container hero-content">
+    <div id="promoBar" class="pill" style="display:none;border-color:var(--acc);color:#ffe9b0"></div>
     <span class="pill" data-en="New Season 2026 — Egypt" data-ar="موسم جديد 2026 — مصر">موسم جديد 2026 — مصر</span>
     <h1 id="heroTitle" data-en="Heavyweight essentials, made for Egypt." data-ar="أساسيات تقيلة، معمولة لمصر.">أساسيات تقيلة، معمولة لمصر.</h1>
     <p id="heroSub" data-en="T-shirts, linen shirts, wide-leg jeans & sweatpants. Clean cuts, honest prices in EGP." data-ar="تيشيرتات، قمصان لينن، جينز وايد ليج وسويت بانتس. قصّات نضيفة وأسعار واضحة بالجنيه.">تيشيرتات، قمصان لينن، جينز وايد ليج وسويت بانتس. قصّات نضيفة وأسعار واضحة بالجنيه.</p>
@@ -135,7 +139,7 @@
 <footer class="footer">
   <div class="container foot-grid">
     <div><img src="assets/logo-light.svg?v=2" alt="VARNOTO" style="height:30px"><p id="footAbout" data-en="Egyptian essentials brand. Cairo, Egypt." data-ar="براند مصري للأساسيات. القاهرة، مصر.">براند مصري للأساسيات. القاهرة، مصر.</p></div>
-    <div><b data-en="Links" data-ar="روابط">روابط</b><br><a href="#home">Home / الرئيسية</a><br><a href="#best">Products / المنتجات</a><br><a href="#contact">Contact / تواصل</a><br><a href="faq.html">FAQ / الأسئلة الشائعة</a><br><a href="admin.html" style="opacity:.55;font-size:13px">Admin / الإدارة</a></div>
+    <div><b data-en="Links" data-ar="روابط">روابط</b><br><a href="#home">Home / الرئيسية</a><br><a href="#best">Products / المنتجات</a><br><a href="#contact">Contact / تواصل</a><br><a href="faq.html">FAQ / الأسئلة الشائعة</a><br><a href="track.html">Track order / تتبع الطلب</a><br><a href="admin.html" style="opacity:.55;font-size:13px">Admin / الإدارة</a></div>
     <div><b data-en="Policies" data-ar="السياسات">السياسات</b><br><a href="terms.html">Terms / الشروط والأحكام</a><br><a href="privacy.html">Privacy / الخصوصية</a><br><a href="shipping.html">Shipping & Exchange / الشحن والاستبدال</a><br><span data-en="14-day exchange • Cash on delivery" data-ar="استبدال 14 يوم • دفع عند الاستلام">استبدال 14 يوم • دفع عند الاستلام</span></div>
   </div>
   <div class="copy">© 2026 VARNOTO — varnoto.com (demo inspired by galvanoegy.com, all content original)</div>
@@ -155,12 +159,35 @@
     <p class="tiny" id="couponMsg" style="margin-top:0"></p>
     <div class="total"><span data-en="Subtotal" data-ar="المجموع الفرعي">المجموع الفرعي</span><b id="cartSub">0 EGP</b></div>
     <div class="total" id="discRow" style="display:none"><span data-en="Discount" data-ar="الخصم">الخصم</span><b id="cartDisc" style="color:#1c7a3d">-0 EGP</b></div>
+    <div class="field" style="margin:8px 0"><label class="tiny" style="display:block;margin-bottom:4px" data-en="Delivery zone" data-ar="منطقة التوصيل">منطقة التوصيل</label><select id="zoneSel" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;font-family:inherit"></select></div>
+    <div id="payRow" style="margin-bottom:8px"></div>
+    <div class="total" id="feeRow"><span data-en="Shipping" data-ar="الشحن">الشحن</span><b id="cartFee">0 EGP</b></div>
+    <p class="tiny" id="freeShip" style="display:none;color:#1c7a3d;font-weight:700" data-en="🎉 Your order ships FREE" data-ar="🎉 طلبك هيتشحن مجاناً">🎉 طلبك هيتشحن مجاناً</p>
     <div class="total"><span data-en="Total" data-ar="الإجمالي">الإجمالي</span><b id="cartTotal">0 EGP</b></div>
     <p class="tiny" data-en="Free shipping over 1999 EGP • COD available" data-ar="شحن مجاني فوق 1999 جنيه • دفع عند الاستلام">شحن مجاني فوق 1999 جنيه • دفع عند الاستلام</p>
     <button class="btn primary full" id="checkoutBtn" data-en="Checkout (WhatsApp order)" data-ar="إتمام الطلب (واتساب)">إتمام الطلب (واتساب)</button>
     <button class="btn ghost full" id="continueBtn" data-en="Continue shopping" data-ar="كمّل تسوّق">كمّل تسوّق</button>
   </div>
 </aside>
+
+<!-- SIZE GUIDE -->
+<div class="modal" id="sizeModal">
+  <div class="modal-card" style="grid-template-columns:1fr;max-width:480px">
+    <button class="modal-x" onclick="closeSize()">✕</button>
+    <div class="modal-body">
+      <h3 data-en="Size guide (cm)" data-ar="دليل المقاسات (سم)">دليل المقاسات (سم)</h3>
+      <table style="width:100%;border-collapse:collapse;margin-top:12px;font-size:14px">
+        <tr><th style="border:1px solid var(--line);padding:8px">Size</th><th style="border:1px solid var(--line);padding:8px" data-en="Chest" data-ar="الصدر">الصدر</th><th style="border:1px solid var(--line);padding:8px" data-en="Length" data-ar="الطول">الطول</th></tr>
+        <tr><td style="border:1px solid var(--line);padding:8px">S</td><td style="border:1px solid var(--line);padding:8px">96</td><td style="border:1px solid var(--line);padding:8px">68</td></tr>
+        <tr><td style="border:1px solid var(--line);padding:8px">M</td><td style="border:1px solid var(--line);padding:8px">102</td><td style="border:1px solid var(--line);padding:8px">70</td></tr>
+        <tr><td style="border:1px solid var(--line);padding:8px">L</td><td style="border:1px solid var(--line);padding:8px">108</td><td style="border:1px solid var(--line);padding:8px">72</td></tr>
+        <tr><td style="border:1px solid var(--line);padding:8px">XL</td><td style="border:1px solid var(--line);padding:8px">114</td><td style="border:1px solid var(--line);padding:8px">74</td></tr>
+        <tr><td style="border:1px solid var(--line);padding:8px">XXL</td><td style="border:1px solid var(--line);padding:8px">120</td><td style="border:1px solid var(--line);padding:8px">76</td></tr>
+      </table>
+      <p class="tiny" data-en="Between sizes? Take the larger one for oversized fits." data-ar="محتار بين مقاسين؟ خد الأكبر في الأوفرسايز.">محتار بين مقاسين؟ خد الأكبر في الأوفرسايز.</p>
+    </div>
+  </div>
+</div>
 
 <!-- QUICK VIEW -->
 <div class="modal" id="quickModal">
@@ -173,12 +200,14 @@
       <p class="tiny" id="mDesc"></p>
       <p class="tiny" id="mMeta" style="color:var(--acc);font-weight:700"></p>
       <div class="sizes" id="mSizes"><span>S</span><span>M</span><span>L</span><span>XL</span><span>XXL</span></div>
+      <p class="tiny"><a class="link" href="javascript:void(0)" onclick="closeModal();openSize()" data-en="📏 Size guide" data-ar="📏 دليل المقاسات">📏 دليل المقاسات</a></p>
       <button class="btn primary full" id="mAdd" data-en="Add to cart" data-ar="ضيف للسلة">ضيف للسلة</button>
     </div>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{});});}</script>
 <script src="app.js?v=2"></script>
 </body>
 </html>

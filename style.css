@@ -110,5 +110,7 @@ body{font-family:'Cairo','Inter',system-ui,sans-serif;background:var(--bg);color
 .mthumbs{display:flex;gap:8px;padding:10px;background:#fff}
 .mthumbs img{width:56px;height:68px;object-fit:cover;border-radius:8px;cursor:pointer;opacity:.6;border:2px solid transparent}
 .mthumbs img.on{opacity:1;border-color:var(--acc)}
+.wish{position:absolute;top:10px;inset-inline-end:10px;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.92);font-size:18px;cursor:pointer;color:#141414;z-index:2}
+.wish.on{color:#b3261e;border-color:#b3261e}
 .modal-body{padding:22px}
 .modal-x{position:absolute;top:10px;inset-inline-end:10px;border:none;background:#141414;color:#fff;width:34px;height:34px;border-radius:50%;cursor:pointer}

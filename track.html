@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title data-en="Track your order | VARNOTO" data-ar="تتبع طلبك | VARNOTO">تتبع طلبك | VARNOTO</title>
+<meta name="description" content="VARNOTO order tracking — تتبع طلبك برقم الموبايل">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="stylesheet" href="style.css?v=2">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>.page{max-width:680px;margin:0 auto;padding:40px 18px 60px}.ord{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:12px}.steps{display:flex;gap:6px;margin-top:10px}.stp{flex:1;text-align:center;font-size:11px;padding:6px 2px;border-radius:8px;background:#f1ede6;color:#999}.stp.on{background:#141414;color:#fff}</style>
+</head>
+<body>
+<div class="announce" id="announce">شحن مجاني للطلبات فوق 1999 جنيه 🚚</div>
+<header class="header"><div class="container header-in">
+<a class="logo" href="index.html"><img src="assets/logo.svg" alt="VARNOTO"></a>
+<div class="actions"><button class="lang-btn" id="langBtn">EN</button></div>
+</div></header>
+<main class="page">
+<h1 data-en="Track your order" data-ar="تتبع طلبك">تتبع طلبك</h1>
+<p class="tiny" data-en="Enter the mobile number you ordered with." data-ar="اكتب رقم الموبايل اللي طلبت بيه.">اكتب رقم الموبايل اللي طلبت بيه.</p>
+<div style="display:flex;gap:8px;margin-top:12px">
+<input id="trPhone" dir="ltr" placeholder="01xxxxxxxxx" style="flex:1;padding:12px;border:1px solid var(--line);border-radius:12px;font-family:inherit">
+<button class="save" id="trBtn" style="background:#141414;color:#fff;border:none;border-radius:12px;padding:12px 26px;font-weight:800;cursor:pointer;font-family:inherit" data-en="Track" data-ar="تتبع">تتبع</button>
+</div>
+<p class="tiny" id="trMsg"></p>
+<div id="trList"></div>
+<a class="back link" href="index.html" data-en="← Back to home" data-ar="→ العودة للرئيسية">→ العودة للرئيسية</a>
+</main>
+<footer class="footer"><div class="copy">© 2026 VARNOTO — varnoto.com</div></footer>
+<script>
+const SUPA_URL='https://xgokhpdhzafuluiqdtah.supabase.co', SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnb2tocGRoemFmdWx1aXFkdGFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5NjU0NDMsImV4cCI6MjEwNDU0MTQ0M30.2B-0GPvxh5KoXVM4jhN06hCt75LakazSC36bh637zQA';
+let L='ar';const $=s=>document.querySelector(s);
+const ST={new:['جديد','New'],preparing:['يتجهز','Preparing'],shipped:['اتشحن','Shipped'],done:['تم ✅','Done']};
+const ORDER=['new','preparing','shipped','done'];
+$('#langBtn').onclick=()=>{L=L==='ar'?'en':'ar';document.documentElement.lang=L;document.documentElement.dir=L==='ar'?'rtl':'ltr';$('#langBtn').textContent=L==='ar'?'EN':'عربي';document.querySelectorAll('[data-en]').forEach(el=>{el.textContent=L==='ar'?el.dataset.ar:el.dataset.en;});};
+$('#trBtn').onclick=async()=>{
+ const ph=$('#trPhone').value.trim();
+ if(ph.replace(/\D/g,'').length<8){$('#trMsg').textContent=L==='ar'?'اكتب رقم موبايل صحيح':'Enter a valid number';return;}
+ $('#trMsg').textContent=L==='ar'?'جاري البحث...':'Searching...';$('#trList').innerHTML='';
+ try{
+  const r=await fetch(SUPA_URL+'/rest/v1/rpc/my_orders',{method:'POST',headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_phone:ph})});
+  const rows=await r.json();
+  if(!rows||!rows.length){$('#trMsg').textContent=L==='ar'?'مفيش طلبات بالرقم ده':'No orders for this number';return;}
+  $('#trMsg').textContent='';
+  $('#trList').innerHTML=rows.map(o=>{
+   const ix=ORDER.indexOf(o.status);
+   const items=(o.items||[]).map(i=>(i.name||'')+' ×'+(i.q||1)).join('، ');
+   return `<div class="ord"><b>#${o.id}</b> — <b>${o.total} EGP</b> <span class="tiny">${new Date(o.created_at).toLocaleDateString('ar-EG')}</span>
+   <div class="tiny" style="margin-top:6px">${items}</div>
+   <div class="steps">${ORDER.map((s,i)=>`<div class="stp${i<=ix?' on':''}">${L==='ar'?ST[s][0]:ST[s][1]}</div>`).join('')}</div></div>`;}).join('');
+ }catch(e){$('#trMsg').textContent=L==='ar'?'تعذر الاتصال':'Connection failed';}
+};
+</script>
+</body>
+</html>

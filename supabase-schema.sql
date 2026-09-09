@@ -184,6 +184,83 @@ grant execute on function dashboard_stats(int, jsonb) to authenticated;
 revoke execute on function dashboard_stats(int, jsonb) from public;
 revoke execute on function dashboard_stats(int, jsonb) from anon;
 
+-- 9) Pack-3: shipping zones, order extras, tracking, staff
+create table if not exists shipping_zones (
+  id text primary key, name_ar text, name_en text, fee int default 0,
+  days text, free_over int default 1999, active boolean default true
+);
+alter table shipping_zones enable row level security;
+drop policy if exists "varnoto zones public" on shipping_zones;
+create policy "varnoto zones public" on shipping_zones for select using (active = true);
+drop policy if exists "varnoto zones admin" on shipping_zones;
+create policy "varnoto zones admin" on shipping_zones for all
+  using ((auth.jwt()->'user_metadata'->>'role')='admin')
+  with check ((auth.jwt()->'user_metadata'->>'role')='admin');
+insert into shipping_zones (id, name_ar, name_en, fee, days, free_over, active) values
+ ('cairo','القاهرة والجيزة','Cairo & Giza',60,'2-4 أيام عمل',1999,true),
+ ('alex','إسكندرية والدلتا','Alexandria & Delta',70,'3-5 أيام عمل',1999,true),
+ ('upper','الصعيد والسواحل وسيناء','Upper Egypt & Coasts & Sinai',80,'4-6 أيام عمل',1999,true)
+on conflict (id) do nothing;
+
+alter table orders add column if not exists ship_fee int default 0;
+alter table orders add column if not exists pay_method text default 'cod';
+alter table orders add column if not exists zone text;
+
+drop function if exists place_order(text,text,jsonb,int,text);
+create or replace function place_order(p_name text, p_phone text, p_items jsonb, p_total int, p_coupon text default null, p_zone text default null, p_pay text default 'cod')
+returns jsonb language plpgsql security definer set search_path = public as $F$
+declare nid bigint; d int := 0; c coupons%rowtype; z shipping_zones%rowtype; fee int := 0;
+begin
+ if p_total is null or p_total < 1 then raise exception 'bad total'; end if;
+ if p_coupon is not null and trim(p_coupon) <> '' then
+  select * into c from coupons where lower(code)=lower(trim(p_coupon));
+  if found and c.active and (c.expires_at is null or c.expires_at > now()) and p_total >= coalesce(c.min_total,0) and (c.max_uses is null or coalesce(c.used_count,0) < c.max_uses) then
+   if c.type='percent' then d := floor(p_total * c.value / 100); else d := least(c.value, p_total); end if;
+   update coupons set used_count = coalesce(used_count,0)+1 where code = c.code;
+  end if;
+ end if;
+ if p_zone is not null and trim(p_zone) <> '' then
+  select * into z from shipping_zones where id = trim(p_zone) and active = true;
+  if found then
+   if (p_total - d) >= coalesce(z.free_over, 1999) then fee := 0; else fee := coalesce(z.fee,0); end if;
+  end if;
+ end if;
+ insert into orders(customer_name, customer_phone, items, total, coupon_code, discount, ship_fee, pay_method, zone)
+ values (nullif(p_name,''), nullif(p_phone,''), coalesce(p_items,'[]'), p_total - d + fee, nullif(trim(p_coupon),''), d, fee, coalesce(p_pay,'cod'), nullif(trim(p_zone), ''))
+ returning id into nid;
+ return jsonb_build_object('order_id',nid,'discount',d,'ship_fee',fee,'total',p_total-d+fee);
+end; $F$;
+grant execute on function place_order(text,text,jsonb,int,text,text,text) to anon, authenticated;
+
+create or replace function my_orders(p_phone text)
+returns jsonb language plpgsql security definer set search_path = public as $F$
+begin
+ if p_phone is null or length(regexp_replace(p_phone,'\D','','g')) < 8 then return '[]'::jsonb; end if;
+ return coalesce((select jsonb_agg(t order by t.id desc) from (
+   select id, created_at, items, total, discount, ship_fee, status, coupon_code
+   from orders where regexp_replace(coalesce(customer_phone,''),'\D','','g') = regexp_replace(p_phone,'\D','','g')
+   order by id desc limit 20) t), '[]'::jsonb);
+end; $F$;
+grant execute on function my_orders(text) to anon, authenticated;
+
+create or replace function set_order_status(p_id int, p_status text)
+returns boolean language plpgsql security definer set search_path = public as $F$
+declare r text;
+begin
+ r := coalesce(auth.jwt()->'user_metadata'->>'role','');
+ if r not in ('admin','staff') then raise exception 'denied'; end if;
+ if p_status not in ('new','preparing','shipped','done') then raise exception 'bad status'; end if;
+ update orders set status = p_status where id = p_id;
+ return found;
+end; $F$;
+grant execute on function set_order_status(int,text) to authenticated;
+revoke execute on function set_order_status(int,text) from public;
+revoke execute on function set_order_status(int,text) from anon;
+
+drop policy if exists "varnoto orders staff read" on orders;
+create policy "varnoto orders staff read" on orders for select
+  using ((auth.jwt()->'user_metadata'->>'role')='staff');
+
 -- 5) Visit tracking (public insert-only, admin read)
 create table if not exists events (
   id bigint generated always as identity primary key,

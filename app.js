@@ -51,6 +51,8 @@ function applyStoreProducts(s){
       if(o.desc_ar!==undefined) p.desc_ar=o.desc_ar;
       if(o.seo_title!==undefined) p.seo_title=o.seo_title;
       if(o.seo_desc!==undefined) p.seo_desc=o.seo_desc;
+      if(o.sale_from!==undefined) p.sale_from=o.sale_from;
+      if(o.sale_to!==undefined) p.sale_to=o.sale_to;
       if(o.img) p.img=o.img;
       if(Array.isArray(o.imgs)&&o.imgs.length) p.imgs=o.imgs.filter(Boolean);
     });
@@ -71,10 +73,60 @@ function applyStoreProducts(s){
     if(!Array.isArray(p.imgs)||!p.imgs.length) p.imgs=p.img?[p.img]:[];
     if(!p.img&&p.imgs.length) p.img=p.imgs[0];
   });
+  // scheduled sales: discount counts only inside its window
+  try{
+    const now=Date.now();
+    PRODUCTS.forEach(p=>{
+      if(!p.old) return;
+      const f=p.sale_from?new Date(p.sale_from).getTime():null, e=p.sale_to?new Date(p.sale_to).getTime():null;
+      if((f&&now<f)||(e&&now>e)) p.old=null;
+    });
+  }catch(e){}
 }
 
 let cart = JSON.parse(localStorage.getItem('varnoto_cart') || '[]');
 let filter = 'all', query = '', SORT='new', SALEONLY=false, COUPON=null;
+let ZONES=[{id:'cairo',name_ar:'القاهرة والجيزة',name_en:'Cairo & Giza',fee:60,days:'2-4',free_over:1999,active:true},{id:'alex',name_ar:'إسكندرية والدلتا',name_en:'Alexandria & Delta',fee:70,days:'3-5',free_over:1999,active:true},{id:'upper',name_ar:'الصعيد والسواحل وسيناء',name_en:'Upper Egypt & Coasts & Sinai',fee:80,days:'4-6',free_over:1999,active:true}];
+let ZONE='cairo', PAY='cod';
+let WISH=[]; try{WISH=JSON.parse(localStorage.getItem('varnoto_wish')||'[]');}catch(e){WISH=[];}
+async function loadZones(){
+  if(!supaOn()){renderZonePay();return;}
+  try{
+    const r=await fetch(SUPABASE_URL+'/rest/v1/shipping_zones?select=*&order=id',{headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY}});
+    const j=await r.json(); if(Array.isArray(j)&&j.length){ZONES=j; if(!ZONES.some(z=>z.id===ZONE)) ZONE=ZONES[0].id;}
+  }catch(e){}
+  renderZonePay();
+}
+function zoneOf(){ return ZONES.find(z=>String(z.id)===String(ZONE))||ZONES[0]||{fee:0,free_over:1999}; }
+function effSubtotal(){ const s=cartSubtotal(); return s-((COUPON&&COUPON.discount)||0); }
+function shipFee(){ const z=zoneOf(); const free=z.free_over!=null?z.free_over:1999; return effSubtotal()>=free?0:(z.fee||0); }
+function renderZonePay(){
+  const zs=$('#zoneSel');
+  if(zs){
+    const act=ZONES.filter(z=>z.active!==false);
+    zs.innerHTML=act.map(z=>`<option value="${z.id}">${LANG==='ar'?(z.name_ar||z.name_en):(z.name_en||z.name_ar)} — ${z.fee} EGP${(z.days?' ('+(LANG==='ar'?z.days+' أيام عمل':z.days+' days')+')':'')}</option>`).join('');
+    if(!act.some(z=>String(z.id)===String(ZONE))&&act.length) ZONE=act[0].id;
+    zs.value=ZONE;
+  }
+  const pr=$('#payRow');
+  if(pr){
+    let pay={}; try{pay=getStore().payment||{};}catch(e){}
+    const methods=[{id:'cod',ar:'الدفع عند الاستلام',en:'Cash on delivery'}];
+    if(pay.instapay&&pay.instapay.on) methods.push({id:'instapay',ar:'انستاباي'+(pay.instapay.number?' ('+pay.instapay.number+')':''),en:'InstaPay'+(pay.instapay.number?' ('+pay.instapay.number+')':'')});
+    if(pay.vodafone&&pay.vodafone.on) methods.push({id:'vodafone',ar:'فودافون كاش'+(pay.vodafone.number?' ('+pay.vodafone.number+')':''),en:'Vodafone Cash'+(pay.vodafone.number?' ('+pay.vodafone.number+')':'')});
+    if(!methods.some(m=>m.id===PAY)) PAY='cod';
+    pr.innerHTML=methods.map(m=>`<label style="display:block;margin:5px 0;font-size:14px"><input type="radio" name="paym" value="${m.id}" ${PAY===m.id?'checked':''}> ${LANG==='ar'?m.ar:m.en}</label>`).join('');
+    pr.querySelectorAll('input[name=paym]').forEach(r=>r.onchange=()=>{PAY=r.value;renderCart();});
+  }
+}
+window.toggleWish=function(id){
+  id=String(id); const i=WISH.indexOf(id);
+  if(i>=0)WISH.splice(i,1); else WISH.push(id);
+  try{localStorage.setItem('varnoto_wish',JSON.stringify(WISH));}catch(e){}
+  renderProducts();
+};
+window.openSize=function(){const m=$('#sizeModal');if(m)m.classList.add('show');};
+window.closeSize=function(){const m=$('#sizeModal');if(m)m.classList.remove('show');};
 
 function t(en, ar){ return LANG === 'ar' ? ar : en; }
 
@@ -88,6 +140,7 @@ function renderFilters(){
   const secs=getSections().filter(s=>PRODUCTS.some(p=>String(p.cat)===String(s.id)));
   const box=$('#filters'); if(!box) return;
   box.innerHTML=`<button class="chip${filter==='all'?' active':''}" data-f="all">${t('All','الكل')}</button>`+
+    `<button class="chip${filter==='fav'?' active':''}" data-f="fav">♥ ${t('Wishlist','المفضلة')} (${WISH.length})</button>`+
     secs.map(s=>`<button class="chip${String(filter)===String(s.id)?' active':''}" data-f="${s.id}">${t(s.en,s.ar)}</button>`).join('');
   box.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{filter=c.dataset.f;renderFilters();renderProducts();});
 }
@@ -106,7 +159,7 @@ function renderCollections(){
 function renderProducts(){
   const box=$('#productsGrid'); if(!box) return;
   let list = PRODUCTS.filter(p =>
-    (filter==='all' || String(p.cat)===String(filter)) &&
+    (filter==='all' || (filter==='fav'&&WISH.includes(String(p.id))) || String(p.cat)===String(filter)) &&
     (!SALEONLY || p.old) &&
     (!query || (p.en+p.ar).toLowerCase().includes(query.toLowerCase()))
   );
@@ -116,6 +169,7 @@ function renderProducts(){
   box.innerHTML = list.length ? list.map(p=>`
     <div class="card">
       <div class="thumb" onclick="quick('${p.id}')">
+        <button class="wish${WISH.includes(String(p.id))?' on':''}" onclick="event.stopPropagation();toggleWish('${p.id}')" aria-label="wishlist">${WISH.includes(String(p.id))?'♥':'♡'}</button>
         ${p.img?`<img src="${p.img}" alt="${(p.en||'').replace(/"/g,'')}" loading="lazy">`:''}
         ${!p.stock ? `<span class="badge out">${t('Sold out','نفد المخزون')}</span>` : (p.old?`<span class="badge">-${Math.round((1-p.price/p.old)*100)}%</span>`:(p.qty>0&&p.qty<=5?`<span class="badge">${t('Only '+p.qty+' left','باقي '+p.qty+' بس')}</span>`:''))}
       </div>
@@ -149,12 +203,16 @@ function renderCart(){
       <div class="qty"><button onclick="chQty('${p.id}',-1)">−</button><span>${r.q}</span><button onclick="chQty('${p.id}',1)">+</button></div></div>
       <button onclick="rmItem('${p.id}')" style="border:none;background:none;cursor:pointer">🗑</button></div>`;
   }).join('');
-  const total = cart.reduce((a,r)=>{const p=findP(r.id);return a+(p?p.price*r.q:0);},0);
+  const total = cartSubtotal();
   const sub=$('#cartSub'); if(sub) sub.textContent=total+' EGP';
   const disc=(COUPON&&COUPON.discount)||0;
   const dr=$('#discRow'); if(dr) dr.style.display=disc>0?'flex':'none';
   const cd=$('#cartDisc'); if(cd) cd.textContent='-'+disc+' EGP';
-  $('#cartTotal').textContent = (total-disc) + ' EGP';
+  const fee=shipFee();
+  const fr=$('#feeRow'); if(fr) fr.style.display=(cart.length&&fee>0)?'flex':'none';
+  const cf=$('#cartFee'); if(cf) cf.textContent='+'+fee+' EGP';
+  const fs=$('#freeShip'); if(fs) fs.style.display=(cart.length&&fee===0)?'block':'none';
+  $('#cartTotal').textContent = (total-disc+fee) + ' EGP';
 }
 function cartSubtotal(){ return cart.reduce((a,r)=>{const p=findP(r.id);return a+(p?p.price*r.q:0);},0); }
 async function applyCoupon(){
@@ -224,6 +282,24 @@ function subscribeRealtime(){
       }).subscribe();
   }catch(e){}
 }
+let promoTimer=null;
+function renderPromo(){
+  const el=$('#promoBar'); if(!el) return;
+  let pr=null; try{ pr=(getStore().theme||{}).promo; }catch(e){}
+  try{ if(promoTimer)clearInterval(promoTimer); }catch(e){}
+  el.style.display='none'; el.innerHTML='';
+  if(!pr||!pr.show||!pr.ends_at) return;
+  const end=new Date(pr.ends_at).getTime();
+  if(isNaN(end)||end<=Date.now()) return;
+  el.style.display='';
+  const tick=()=>{
+    const ms=end-Date.now();
+    if(ms<=0){el.style.display='none';try{clearInterval(promoTimer);}catch(e){}return;};
+    const d=Math.floor(ms/864e5),h=Math.floor(ms/36e5)%24,m=Math.floor(ms/6e4)%60,s=Math.floor(ms/1e3)%60;
+    el.innerHTML=`<b>${pr['text_'+LANG]||pr.text_ar||pr.text_en||''}</b> <span dir="ltr">${d}:${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}</span>`;
+  };
+  tick(); promoTimer=setInterval(tick,1000);
+}
 function pingView(){
   try{
     if(!supaOn()) return;
@@ -242,6 +318,7 @@ async function boot(){
     }
   }catch(e){}
   pingView();
+  loadZones();
   setLang('ar');
   subscribeRealtime();
 }
@@ -279,7 +356,7 @@ function setLang(l){
       if(s.contact.tiktok&&$('#ttBtn')) $('#ttBtn').href=s.contact.tiktok;
     }
   }catch(e){}
-  renderFilters(); renderCollections(); renderProducts(); renderCart(); applyTheme();
+  renderFilters(); renderCollections(); renderProducts(); renderCart(); renderZonePay(); applyTheme(); renderPromo();
 }
 
 // ---- Theme / header / footer / SEO (dashboard-controlled) ----
@@ -371,16 +448,18 @@ $('#checkoutBtn').onclick = async ()=>{
   const items = cart.map(r=>{const p=findP(r.id);return {id:String(r.id),name:p?p.en:'',q:r.q,price:p?p.price:0};});
   const cname=($('#custName')&&$('#custName').value||'').trim();
   const cphone=($('#custPhone')&&$('#custPhone').value||'').trim();
-  let orderId=null, finalTotal=total, disc=0;
+  let orderId=null, finalTotal=total, disc=0, fee=0;
   if(supaOn()){
     try{
-      const r=await fetch(SUPABASE_URL+'/rest/v1/rpc/place_order',{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_name:cname||null,p_phone:cphone||null,p_items:items,p_total:total,p_coupon:(COUPON&&COUPON.code)||null})});
-      if(r.ok){const j=await r.json(); orderId=(j&&(typeof j==='number'?j:j.order_id))||null; disc=(j&&j.discount)||0; finalTotal=(j&&j.total!=null)?j.total:(total-disc);}
-    }catch(e){}
-  }
+      const r=await fetch(SUPABASE_URL+'/rest/v1/rpc/place_order',{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_name:cname||null,p_phone:cphone||null,p_items:items,p_total:total,p_coupon:(COUPON&&COUPON.code)||null,p_zone:ZONE,p_pay:PAY})});
+      if(r.ok){const j=await r.json(); orderId=(j&&(typeof j==='number'?j:j.order_id))||null; disc=(j&&j.discount)||0; fee=(j&&j.ship_fee!=null)?j.ship_fee:shipFee(); finalTotal=(j&&j.total!=null)?j.total:(total-disc+fee);}
+    }catch(e){ fee=shipFee(); finalTotal=total-disc+fee; }
+  } else { fee=shipFee(); finalTotal=total-disc+fee; }
+  const payName=PAY==='cod'?(LANG==='ar'?'الدفع عند الاستلام':'Cash on delivery'):(PAY==='instapay'?(LANG==='ar'?'انستاباي':'InstaPay'):(LANG==='ar'?'فودافون كاش':'Vodafone Cash'));
   let txt=(LANG==='ar'?'طلب جديد VARNOTO:':'New VARNOTO order:')+'\n'+items.map(i=>`${i.name} x${i.q}`).join('\n')+`\nSubtotal: ${total} EGP`;
   if(disc>0) txt+=`\nDiscount (${(COUPON&&COUPON.code)||''}): -${disc} EGP`;
-  txt+=`\nTotal: ${finalTotal} EGP`;
+  txt+=`\nShipping (${zoneOf().name_ar||zoneOf().name_en||''}): ${fee===0?(LANG==='ar'?'مجاني':'FREE'):fee+' EGP'}`;
+  txt+=`\nTotal: ${finalTotal} EGP`;txt+=`\nPay: ${payName}`;
   if(orderId) txt+='\nOrder #'+orderId;
   if(cname) txt+='\nName: '+cname;
   if(cphone) txt+='\nPhone: '+cphone;
