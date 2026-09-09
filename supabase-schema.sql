@@ -68,3 +68,19 @@ create policy "varnoto log admin" on change_log for all
 -- 4) Realtime (so the dashboard and site update live)
 alter publication supabase_realtime add table orders;
 alter publication supabase_realtime add table store_config;
+
+-- 5) Visit tracking (public insert-only, admin read)
+create table if not exists events (
+  id bigint generated always as identity primary key,
+  created_at timestamptz default now(),
+  type text default 'view',
+  page text,
+  session_id text
+);
+alter table events enable row level security;
+drop policy if exists "varnoto events insert" on events;
+create policy "varnoto events insert" on events for insert with check (type='view');
+drop policy if exists "varnoto events admin" on events;
+create policy "varnoto events admin" on events for all
+  using ((auth.jwt()->'user_metadata'->>'role')='admin')
+  with check ((auth.jwt()->'user_metadata'->>'role')='admin');

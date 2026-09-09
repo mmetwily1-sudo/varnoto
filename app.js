@@ -195,6 +195,15 @@ function subscribeRealtime(){
       }).subscribe();
   }catch(e){}
 }
+function pingView(){
+  try{
+    if(!supaOn()) return;
+    if(sessionStorage.getItem('vnt_ping')) return;
+    sessionStorage.setItem('vnt_ping','1');
+    let sid=''; try{ sid=sessionStorage.getItem('vnt_sid')||('s'+Date.now().toString(36)+Math.floor(Math.random()*999)); sessionStorage.setItem('vnt_sid',sid); }catch(e){}
+    fetch(SUPABASE_URL+'/rest/v1/events',{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({type:'view',page:location.pathname,session_id:sid})}).catch(()=>{});
+  }catch(e){}
+}
 async function boot(){
   try{
     const remote=await pullRemote();
@@ -203,7 +212,8 @@ async function boot(){
       applyStoreProducts(remote);
     }
   }catch(e){}
-boot();
+  pingView();
+  setLang('ar');
   subscribeRealtime();
 }
 
