@@ -9,9 +9,9 @@
 <link rel="stylesheet" href="style.css?v=2">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-.admin{max-width:1080px;margin:0 auto;padding:26px 18px 70px}
+.admin{max-width:1120px;margin:0 auto;padding:26px 18px 70px}
 .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}
-.tab{border:1px solid var(--line);background:#fff;border-radius:99px;padding:10px 20px;cursor:pointer;font-weight:800;font-family:inherit}
+.tab{border:1px solid var(--line);background:#fff;border-radius:99px;padding:10px 18px;cursor:pointer;font-weight:800;font-family:inherit;font-size:14px}
 .tab.active{background:#141414;color:#fff;border-color:#141414}
 .tab .bdg{background:#b3261e;color:#fff;border-radius:99px;padding:0 8px;font-size:12px;margin-inline-start:4px}
 .panel{display:none;background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px}
@@ -23,14 +23,17 @@ td input[type=text],td input[type=number],td select{width:100%;padding:7px 9px;b
 .prow img{width:46px;height:56px;object-fit:cover;border-radius:8px}
 .field{margin-bottom:14px}
 .field label{display:block;font-weight:800;margin-bottom:6px;font-size:14px}
-.field input{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;font-family:inherit}
+.field input,.field textarea,.field select{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:14px}
+.field textarea{min-height:90px;resize:vertical}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-@media(max-width:700px){.row2{grid-template-columns:1fr}table{font-size:12px}}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+@media(max-width:700px){.row2,.row3{grid-template-columns:1fr}table{font-size:12px}}
 .stats{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}
-.stat{background:#141414;color:#fff;border-radius:14px;padding:12px 20px;min-width:130px}
+.stat{background:#141414;color:#fff;border-radius:14px;padding:12px 20px;min-width:120px}
 .stat b{display:block;font-size:22px}.stat span{font-size:12px;color:#cfc9bc}
 .btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;align-items:center}
 .save{background:#141414;color:#fff;border:none;border-radius:12px;padding:13px 30px;font-weight:800;cursor:pointer;font-family:inherit;font-size:15px}
+.ghostb{background:#fff;color:#141414;border:1px solid #141414;border-radius:12px;padding:12px 22px;font-weight:800;cursor:pointer;font-family:inherit}
 .reset{background:#fff;border:1px solid #b3261e;color:#b3261e;border-radius:12px;padding:12px 20px;font-weight:800;cursor:pointer;font-family:inherit}
 .okmsg{color:#1c7a3d;font-weight:800;margin-top:10px}
 #gate{max-width:400px;margin:80px auto;text-align:center;background:#fff;border:1px solid var(--line);border-radius:18px;padding:36px 28px}
@@ -43,6 +46,12 @@ td input[type=text],td input[type=number],td select{width:100%;padding:7px 9px;b
 .st-done{background:#1c7a3d;color:#fff;border-radius:99px;padding:2px 10px;font-size:12px;font-weight:800}
 .logrow td{font-size:13px}
 .acct{background:#faf9f7;border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:14px}
+#editor{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;place-items:center;z-index:99;padding:14px;overflow:auto}
+#editor.show{display:grid}
+.ed-card{background:#fff;border-radius:18px;max-width:760px;width:100%;padding:24px;max-height:92vh;overflow:auto}
+.ed-card h3{margin-bottom:14px}
+.small{font-size:12px;color:var(--mut)}
+.del{background:#fff;border:1px solid #b3261e;color:#b3261e;border-radius:8px;padding:6px 12px;cursor:pointer;font-family:inherit;font-weight:700}
 </style>
 </head>
 <body>
@@ -66,16 +75,20 @@ td input[type=text],td input[type=number],td select{width:100%;padding:7px 9px;b
 <p class="tiny" id="syncState">☁ جاري فحص الاتصال...</p>
 <div class="stats">
 <div class="stat"><b id="stCount">–</b><span>منتج</span></div>
-<div class="stat"><b id="stStock">–</b><span>متاح في المخزون</span></div>
-<div class="stat"><b id="stAvg">–</b><span>متوسط السعر (جنيه)</span></div>
+<div class="stat"><b id="stStock">–</b><span>متاح</span></div>
+<div class="stat"><b id="stAvg">–</b><span>متوسط السعر</span></div>
 <div class="stat"><b id="stOrders">–</b><span>طلب جديد</span></div>
 </div>
 <div class="tabs">
 <button class="tab" data-t="pOrders">🧾 الطلبات <span class="bdg" id="ordBdg" style="display:none">0</span></button>
 <button class="tab active" data-t="pProducts">📦 المنتجات</button>
-<button class="tab" data-t="pTexts">✏️ نصوص الموقع</button>
+<button class="tab" data-t="pSections">🗂 الأقسام</button>
+<button class="tab" data-t="pTheme">🎨 الثيم والواجهة</button>
+<button class="tab" data-t="pHF">🧱 الهيدر والفوتر</button>
+<button class="tab" data-t="pPages">📄 الصفحات التعريفية</button>
+<button class="tab" data-t="pSEO">🚀 SEO</button>
 <button class="tab" data-t="pContact">📞 التواصل</button>
-<button class="tab" data-t="pLog">📜 سجل التغييرات</button>
+<button class="tab" data-t="pLog">📜 السجل</button>
 <button class="tab" data-t="pBackup">💾 نسخ + حساب</button>
 </div>
 
@@ -86,14 +99,25 @@ td input[type=text],td input[type=number],td select{width:100%;padding:7px 9px;b
 </div>
 
 <div class="panel active" id="pProducts">
-<table><thead><tr><th></th><th>الاسم EN</th><th>الاسم AR</th><th>السعر</th><th>قبل الخصم</th><th>متاح؟</th><th>الصورة</th></tr></thead>
+<div class="btnrow" style="margin-top:0;margin-bottom:14px"><button class="save" id="addProdBtn">＋ إضافة منتج جديد</button></div>
+<table><thead><tr><th></th><th>الاسم</th><th>القسم</th><th>السعر</th><th>الكمية</th><th>متاح؟</th><th>إجراءات</th></tr></thead>
 <tbody id="prodRows"></tbody></table>
-<div class="btnrow"><button class="save" id="saveProducts">💾 حفظ المنتجات</button><span class="okmsg" id="msgP"></span></div>
 </div>
 
-<div class="panel" id="pTexts">
-<div class="field"><label>شريط الإعلان (عربي)</label><input id="ann_ar" type="text"></div>
-<div class="field"><label>شريط الإعلان (English)</label><input id="ann_en" type="text" dir="ltr"></div>
+<div class="panel" id="pSections">
+<p class="tiny">الأقسام هي مجموعات الموقع (التيشيرتات، اللينن...). إخفاء قسم يخفيه من الموقع والفلاتر.</p>
+<table><thead><tr><th>ID</th><th>EN</th><th>AR</th><th>وصف EN</th><th>وصف AR</th><th>صورة</th><th>ظاهر؟</th><th></th></tr></thead>
+<tbody id="secRows"></tbody></table>
+<div class="btnrow"><button class="ghostb" id="addSecBtn">＋ قسم جديد</button><button class="save" id="saveSecs">💾 حفظ الأقسام</button><span class="okmsg" id="msgS"></span></div>
+</div>
+
+<div class="panel" id="pTheme">
+<h3>🎨 ثيم الواجهة</h3>
+<div class="row3">
+<div class="field"><label>لون الخلفية</label><input id="th_bg" type="color" value="#faf9f7"></div>
+<div class="field"><label>لون النص</label><input id="th_ink" type="color" value="#141414"></div>
+<div class="field"><label>اللون المميز</label><input id="th_acc" type="color" value="#c9a24b"></div>
+</div>
 <div class="row2">
 <div class="field"><label>عنوان البنر (عربي)</label><input id="ht_ar" type="text"></div>
 <div class="field"><label>عنوان البنر (English)</label><input id="ht_en" type="text" dir="ltr"></div>
@@ -102,7 +126,53 @@ td input[type=text],td input[type=number],td select{width:100%;padding:7px 9px;b
 <div class="field"><label>وصف البنر (عربي)</label><input id="hs_ar" type="text"></div>
 <div class="field"><label>وصف البنر (English)</label><input id="hs_en" type="text" dir="ltr"></div>
 </div>
-<div class="btnrow"><button class="save" id="saveTexts">💾 حفظ النصوص</button><span class="okmsg" id="msgT"></span></div>
+<div class="field"><label>صورة البنر (اتركها فاضية للصورة الحالية)</label>
+<div class="row2"><select id="th_hero_pick"></select><input id="th_hero" type="text" dir="ltr" placeholder="assets/hero.jpg أو رابط"></div></div>
+<div class="row2">
+<div class="field"><label>عنوان المجموعات (عربي)</label><input id="hc_ar" type="text"></div>
+<div class="field"><label>Collections heading (English)</label><input id="hc_en" type="text" dir="ltr"></div>
+</div>
+<div class="row2">
+<div class="field"><label>عنوان الأكثر مبيعاً (عربي)</label><input id="hb_ar" type="text"></div>
+<div class="field"><label>Best sellers heading (English)</label><input id="hb_en" type="text" dir="ltr"></div>
+</div>
+<div class="field"><label>شريط الإعلان (عربي)</label><input id="ann_ar" type="text"></div>
+<div class="field"><label>شريط الإعلان (English)</label><input id="ann_en" type="text" dir="ltr"></div>
+<div class="field"><label>إظهار بلوكات الموقع</label>
+<div><label><input type="checkbox" id="sh_col" checked> المجموعات</label>
+<label><input type="checkbox" id="sh_about" checked> عن البراند</label>
+<label><input type="checkbox" id="sh_contact" checked> تواصل معنا</label></div></div>
+<div class="btnrow"><button class="save" id="saveTheme">💾 حفظ الثيم</button><span class="okmsg" id="msgTh"></span></div>
+</div>
+
+<div class="panel" id="pHF">
+<h3>🧱 روابط القائمة العلوية</h3>
+<table><thead><tr><th>EN</th><th>AR</th><th>الرابط</th><th></th></tr></thead><tbody id="navRows"></tbody></table>
+<div class="btnrow"><button class="ghostb" id="addNavBtn">＋ رابط</button></div>
+<h3 style="margin-top:20px">الفوتر</h3>
+<div class="field"><label>نبذة الفوتر (عربي)</label><input id="ft_ar" type="text"></div>
+<div class="field"><label>Footer about (English)</label><input id="ft_en" type="text" dir="ltr"></div>
+<div class="field"><label>سطر الحقوق (يظهر كما هو)</label><input id="ft_note" type="text" dir="ltr"></div>
+<div class="btnrow"><button class="save" id="saveHF">💾 حفظ الهيدر والفوتر</button><span class="okmsg" id="msgHF"></span></div>
+</div>
+
+<div class="panel" id="pPages">
+<div class="field"><label>الصفحة</label><select id="pg_sel"><option value="terms">الشروط والأحكام</option><option value="privacy">سياسة الخصوصية</option><option value="shipping">الشحن والاستبدال</option><option value="faq">الأسئلة الشائعة</option></select></div>
+<div class="row2">
+<div class="field"><label>العنوان (عربي)</label><input id="pg_tar" type="text"></div>
+<div class="field"><label>Title (English)</label><input id="pg_ten" type="text" dir="ltr"></div>
+</div>
+<div class="field"><label>المحتوى (عربي) — سطر فارغ = فقرة جديدة</label><textarea id="pg_bar"></textarea></div>
+<div class="field"><label>Content (English)</label><textarea id="pg_ben" dir="ltr"></textarea></div>
+<div class="btnrow"><button class="save" id="savePg">💾 حفظ الصفحة</button><span class="okmsg" id="msgPg"></span></div>
+</div>
+
+<div class="panel" id="pSEO">
+<div class="field"><label>عنوان الموقع (يظهر في جوجل)</label><input id="seo_t" type="text" dir="ltr"></div>
+<div class="field"><label>وصف الموقع (Meta Description)</label><textarea id="seo_d" dir="ltr"></textarea></div>
+<div class="field"><label>صورة المشاركة (OG Image)</label><input id="seo_og" type="text" dir="ltr"></div>
+<p class="tiny">تحسينات المنتجات (العنوان والوصف لكل منتج) من زر ✏️ بجانب كل منتج في تبويب المنتجات — وتظهر في كروت البحث وبيانات المنتج المنظمة (JSON-LD).</p>
+<div class="btnrow"><button class="save" id="saveSEO">💾 حفظ SEO</button><span class="okmsg" id="msgSEO"></span></div>
 </div>
 
 <div class="panel" id="pContact">
@@ -136,27 +206,63 @@ td input[type=text],td input[type=number],td select{width:100%;padding:7px 9px;b
 </div>
 </div>
 
+<div id="editor"><div class="ed-card">
+<h3 id="edTitle">تحرير منتج</h3>
+<div class="row2">
+<div class="field"><label>الاسم EN</label><input id="e_en" type="text" dir="ltr"></div>
+<div class="field"><label>الاسم AR</label><input id="e_ar" type="text"></div>
+</div>
+<div class="row3">
+<div class="field"><label>القسم (ID)</label><input id="e_cat" type="text" dir="ltr"></div>
+<div class="field"><label>السعر (جنيه)</label><input id="e_price" type="number" min="0"></div>
+<div class="field"><label>قبل الخصم (فاضي = مفيش)</label><input id="e_old" type="number" min="0"></div>
+</div>
+<div class="row3">
+<div class="field"><label>الكمية بالمخزون</label><input id="e_qty" type="number" min="0"></div>
+<div class="field"><label>الوزن (نص حر)</label><input id="e_weight" type="text"></div>
+<div class="field"><label>متاح؟</label><select id="e_stock"><option value="1">متاح ✅</option><option value="0">نافد ❌</option></select></div>
+</div>
+<div class="field"><label>الوصف EN</label><textarea id="e_den" dir="ltr"></textarea></div>
+<div class="field"><label>الوصف AR</label><textarea id="e_dar"></textarea></div>
+<div class="field"><label>الصور (سطر لكل صورة — الأولى هي الرئيسية)</label><textarea id="e_imgs" dir="ltr" style="min-height:70px"></textarea><p class="small">صور الموقع: assets/p-tee-white.jpg ... أو رابط كامل https://...</p></div>
+<div class="field"><label>SEO Title (عنوان المنتج في جوجل)</label><input id="e_st" type="text" dir="ltr"></div>
+<div class="field"><label>SEO Description</label><textarea id="e_sd" dir="ltr" style="min-height:60px"></textarea></div>
+<div class="btnrow"><button class="save" id="edSave">💾 حفظ المنتج</button><button class="ghostb" id="edCopy">📋 نسخ رابط المنتج</button><button class="ghostb" id="edClose">إغلاق</button><span class="okmsg" id="edMsg"></span></div>
+</div></div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const KEY='varnoto_store_v1', EMERGENCY_PIN='2026';
-const DEFAULTS=[
- {id:1,cat:'tshirt',en:'Essential White Tee',ar:'تيشيرت أبيض أساسي',price:350,old:'',stock:true,img:'assets/p-tee-white.jpg'},
- {id:2,cat:'tshirt',en:'Essential Black Tee',ar:'تيشيرت أسود أساسي',price:350,old:450,stock:true,img:'assets/p-tee-black.jpg'},
- {id:3,cat:'sweat',en:'Oversized Grey Sweatshirt',ar:'سويت شيرت رمادي أوفرسايز',price:600,old:'',stock:true,img:'assets/p-sweatshirt-grey.jpg'},
- {id:4,cat:'sweat',en:'Lounge Set — Cream',ar:'طقم لاونج — كريمي',price:700,old:'',stock:true,img:'assets/p-lounge-cream.jpg'},
- {id:5,cat:'linen',en:'Summer Striped Shirt',ar:'قميص صيفي مخطط',price:750,old:'',stock:true,img:'assets/p-shirt-summer.jpg'},
- {id:6,cat:'linen',en:'Black Evening Shirt',ar:'قميص أسود أنيق',price:750,old:850,stock:true,img:'assets/p-shirt-black.jpg'},
- {id:7,cat:'jeans',en:'Wide-Leg Jeans — Ice Blue',ar:'جينز وايد ليج — أزرق ثلجي',price:900,old:'',stock:true,img:'assets/p-jeans-ice.jpg'},
- {id:8,cat:'jeans',en:'Wide-Leg Jeans — Raw',ar:'جينز وايد ليج — خام',price:900,old:'',stock:true,img:'assets/p-jeans-raw.jpg'},
- {id:9,cat:'tank',en:'Heavyweight Tank — White',ar:'تانك توب تقيل — أبيض',price:400,old:'',stock:true,img:'assets/p-tank-white.jpg'},
- {id:10,cat:'tank',en:'Heavyweight Tank — Black',ar:'تانك توب تقيل — أسود',price:400,old:'',stock:true,img:'assets/p-tank-black.jpg'},
- {id:11,cat:'knit',en:'Two-Tone Knitted Polo',ar:'بولو نيت تو-تون',price:750,old:'',stock:true,img:'assets/p-polo-duo.jpg'},
- {id:12,cat:'tailored',en:'Tailored Pants — Beige',ar:'بنطلون كلاسيك — بيج',price:850,old:'',stock:true,img:'assets/p-pants-beige.jpg'}
+const DEFAULT_NAV=[{en:'Home',ar:'الرئيسية',href:'#home'},{en:'Collections',ar:'المجموعات',href:'#collections'},{en:'Best Selling',ar:'الأكثر مبيعاً',href:'#best'},{en:'About',ar:'عن البراند',href:'#about'},{en:'Contact',ar:'تواصل معنا',href:'#contact'}];
+const DEFAULT_SECS=[
+ {id:'tshirt',en:'T-shirts',ar:'تيشيرتات',sub_en:'heavyweight',sub_ar:'قطن تقيل',img:'assets/p-tee-white.jpg',visible:true},
+ {id:'linen',en:'Linen Shirts',ar:'قمصان لينن',sub_en:'breathable',sub_ar:'خامة تتنفس',img:'assets/p-shirt-summer.jpg',visible:true},
+ {id:'jeans',en:'Wide-Leg Jeans',ar:'جينز وايد ليج',sub_en:'denim',sub_ar:'دنيم',img:'assets/p-jeans-ice.jpg',visible:true},
+ {id:'sweat',en:'Sweat & Lounge',ar:'سويت ولاونج',sub_en:'fleece',sub_ar:'ميلتون',img:'assets/p-lounge-cream.jpg',visible:true},
+ {id:'tailored',en:'Tailored Pants',ar:'بناطيل كلاسيك',sub_en:'smart',sub_ar:'شيك',img:'assets/p-pants-beige.jpg',visible:true},
+ {id:'knit',en:'Knitted Polos',ar:'بولو نيت',sub_en:'knit',sub_ar:'تريكو',img:'assets/p-polo-duo.jpg',visible:true},
+ {id:'tank',en:'Tank Tops',ar:'تانك توب',sub_en:'gym',sub_ar:'جيم',img:'assets/p-tank-white.jpg',visible:true},
+ {id:'regular',en:'Essential Tees',ar:'أساسيات',sub_en:'daily',sub_ar:'يومي',img:'assets/p-tee-black.jpg',visible:true}
 ];
+const DEFAULTS=[
+ {id:1,cat:'tshirt',en:'Essential White Tee',ar:'تيشيرت أبيض أساسي',price:350,old:'',stock:true,qty:20,weight:'',desc_en:'',desc_ar:'',seo_title:'',seo_desc:'',imgs:['assets/p-tee-white.jpg']},
+ {id:2,cat:'tshirt',en:'Essential Black Tee',ar:'تيشيرت أسود أساسي',price:350,old:450,stock:true,qty:20,weight:'',desc_en:'',desc_ar:'',seo_title:'',seo_desc:'',imgs:['assets/p-tee-black.jpg']},
+ {id:3,cat:'sweat',en:'Oversized Grey Sweatshirt',ar:'سويت شيرت رمادي أوفرسايز',price:600,old:'',stock:true,qty:20,weight:'',desc_en:'',desc_ar:'',seo_title:'',seo_desc:'',imgs:['assets/p-sweatshirt-grey.jpg']},
+ {id:4,cat:'sweat',en:'Lounge Set — Cream',ar:'طقم لاونج — كريمي',price:700,old:'',stock:true,qty:20,weight:'',desc_en:'',desc_ar:'',seo_title:'',seo_desc:'',imgs:['assets/p-lounge-cream.jpg']},
+ {id:5,cat:'linen',en:'Summer Striped Shirt',ar:'قميص صيفي مخطط',price:750,old:'',stock:true,qty:20,weight:'',desc_en:'',desc_ar:'',seo_title:'',seo_desc:'',imgs:['assets/p-shirt-summer.jpg']},
+ {id:6,cat:'linen',en:'Black Evening Shirt',ar:'قميص أسود أنيق',price:750,old:850,stock:true,qty:20,weight:'',desc_en:'',desc_ar:'',seo_title:'',seo_desc:'',imgs:['assets/p-shirt-black.jpg']},
+ {id:7,cat:'jeans',en:'Wide-Leg Jeans — Ice Blue',ar:'جينز وايد ليج — أزرق ثلجي',price:900,old:'',stock:true,qty:20,weight:'',desc_en:'',desc_ar:'',seo_title:'',seo_desc:'',imgs:['assets/p-jeans-ice.jpg']},
+ {id:8,cat:'jeans',en:'Wide-Leg Jeans — Raw',ar:'جينز وايد ليج — خام',price:900,old:'',stock:true,qty:20,weight:'',desc_en:'',desc_ar:'',seo_title:'',seo_desc:'',imgs:['assets/p-jeans-raw.jpg']},
+ {id:9,cat:'tank',en:'Heavyweight Tank — White',ar:'تانك توب تقيل — أبيض',price:400,old:'',stock:true,qty:20,weight:'',desc_en:'',desc_ar:'',seo_title:'',seo_desc:'',imgs:['assets/p-tank-white.jpg']},
+ {id:10,cat:'tank',en:'Heavyweight Tank — Black',ar:'تانك توب تقيل — أسود',price:400,old:'',stock:true,qty:20,weight:'',desc_en:'',desc_ar:'',seo_title:'',seo_desc:'',imgs:['assets/p-tank-black.jpg']},
+ {id:11,cat:'knit',en:'Two-Tone Knitted Polo',ar:'بولو نيت تو-تون',price:750,old:'',stock:true,qty:20,weight:'',desc_en:'',desc_ar:'',seo_title:'',seo_desc:'',imgs:['assets/p-polo-duo.jpg']},
+ {id:12,cat:'tailored',en:'Tailored Pants — Beige',ar:'بنطلون كلاسيك — بيج',price:850,old:'',stock:true,qty:20,weight:'',desc_en:'',desc_ar:'',seo_title:'',seo_desc:'',imgs:['assets/p-pants-beige.jpg']}
+];
+const ASSETS=['assets/hero.jpg','assets/p-tee-white.jpg','assets/p-tee-black.jpg','assets/p-sweatshirt-grey.jpg','assets/p-lounge-cream.jpg','assets/p-shirt-summer.jpg','assets/p-shirt-black.jpg','assets/p-jeans-ice.jpg','assets/p-jeans-raw.jpg','assets/p-tank-white.jpg','assets/p-tank-black.jpg','assets/p-polo-duo.jpg','assets/p-pants-beige.jpg'];
 const $=s=>document.querySelector(s);
 const SUPA_URL='https://xgokhpdhzafuluiqdtah.supabase.co', SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnb2tocGRoemFmdWx1aXFkdGFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5NjU0NDMsImV4cCI6MjEwNDU0MTQ0M30.2B-0GPvxh5KoXVM4jhN06hCt75LakazSC36bh637zQA';
 const supaOn=()=>SUPA_URL&&!SUPA_URL.startsWith('__');
-let SB=null, LOCAL_MODE=false;
+let SB=null, LOCAL_MODE=false, EDIT_ID=null;
 function sb(){ if(!SB&&window.supabase&&supaOn()) SB=window.supabase.createClient(SUPA_URL,SUPA_KEY); return SB; }
 async function H(){ try{ const c=sb(); if(c){ const r=await c.auth.getSession(); const t=r.data&&r.data.session&&r.data.session.access_token; if(t) return {apikey:SUPA_KEY,Authorization:'Bearer '+t}; } }catch(e){} return {apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY}; }
 function setSync(t){const e=$('#syncState');if(e)e.textContent=t;}
@@ -180,8 +286,8 @@ async function syncFromCloud(){
   const h=await H();
   const r=await fetch(SUPA_URL+'/rest/v1/store_config?id=eq.1&select=data',{headers:h});
   const j=await r.json();const d=j&&j[0]&&j[0].data;
-  if(d&&(d.products||d.announce||d.hero||d.contact)){localStorage.setItem(KEY,JSON.stringify(d));fillAll();setSync('☁ متصل — التعديلات تظهر لكل الزوار ✅');}
-  else setSync('☁ متصل — لا بيانات سحابية بعد، احفظ أول تعديل');
+  if(d){localStorage.setItem(KEY,JSON.stringify(d));fillAll();setSync('☁ متصل — التعديلات تظهر لكل الزوار ✅');}
+  else setSync('☁ متصل — لا بيانات سحابية بعد');
  }catch(e){setSync('⚠ تعذر الاتصال بالسحابة — شغال محلي');}
 }
 async function logAction(action,details){
@@ -191,41 +297,37 @@ async function logAction(action,details){
   const h=await H();h['Content-Type']='application/json';h.Prefer='return=minimal';
   await fetch(SUPA_URL+'/rest/v1/change_log',{method:'POST',headers:h,body:JSON.stringify({actor_email:em||'admin',action,details:details||{}})});
  }catch(e){}
- loadLog();
+ if($('#pLog').classList.contains('active'))loadLog();
 }
-function fillAll(){renderRows();fillTexts();fillC();}
-function merged(){const s=load();const byId={};(s.products||[]).forEach(o=>{if(o&&o.id!=null)byId[o.id]=o;});return DEFAULTS.map(d=>Object.assign({},d,byId[d.id]||{}));}
+function merged(){const s=load();const byId={};(s.products||[]).forEach(o=>{if(o&&o.id!=null)byId[String(o.id)]=o;});return DEFAULTS.map(d=>Object.assign({},d,byId[String(d.id)]||{}));}
+function allProducts(){const base=merged();const s=load();const known=new Set(base.map(p=>String(p.id)));(s.products||[]).forEach(o=>{if(o&&o.id!=null&&!known.has(String(o.id)))base.push(Object.assign({cat:'tshirt',en:'',ar:'',price:0,old:'',stock:true,qty:0,weight:'',desc_en:'',desc_ar:'',seo_title:'',seo_desc:'',imgs:[]},o));});return base;}
+function getSecs(){const s=load();if(Array.isArray(s.sections)&&s.sections.length)return s.sections;return DEFAULT_SECS.map(x=>Object.assign({},x));}
+function fillAll(){renderRows();fillTheme();fillHF();fillPg();fillSEO();fillC();}
 
-// gate — email/password (Supabase Auth), emergency local via #local + PIN
+// gate
 async function enterDash(email){
  $('#gate').style.display='none';$('#dash').style.display='block';$('#logoutBtn').style.display='inline-block';
  $('#acctEmail').textContent=email||'وضع الطوارئ المحلي';
  syncFromCloud();loadOrders();loadLog();subscribeOrders();
  if('Notification' in window&&Notification.permission==='default'){try{Notification.requestPermission();}catch(e){}}
 }
-(async function initGate(){
+(function initGate(){
  if(location.hash==='#local'){
   $('#gateUser').textContent='وضع الطوارئ — حفظ محلي فقط';
-  $('#em').style.display='none';
-  $('#pw').placeholder='رمز الطوارئ';
+  $('#em').style.display='none';$('#pw').placeholder='رمز الطوارئ';
   $('#loginBtn').onclick=()=>{ if($('#pw').value===EMERGENCY_PIN){LOCAL_MODE=true;enterDash('');} else $('#pinMsg').textContent='رمز غلط.'; };
   return;
  }
  $('#loginBtn').onclick=doLogin;
  $('#pw').onkeydown=e=>{if(e.key==='Enter')doLogin();};
- try{
-  const c=sb();
-  if(c){const r=await c.auth.getSession();const u=r.data&&r.data.session&&r.data.session.user;
-   if(u){enterDash(u.email);return;}}
- }catch(e){}
+ (async()=>{try{const c=sb();if(c){const r=await c.auth.getSession();const u=r.data&&r.data.session&&r.data.session.user;if(u){enterDash(u.email);return;}}}catch(e){}})();
 })();
 async function doLogin(){
  const em=$('#em').value.trim(),pw=$('#pw').value;
  if(!em||!pw){$('#pinMsg').textContent='اكتب الإيميل وكلمة السر.';return;}
  $('#pinMsg').textContent='جاري الدخول...';
  try{
-  const c=sb();
-  if(!c){$('#pinMsg').textContent='تعذر الاتصال. جرب وضع #local.';return;}
+  const c=sb();if(!c){$('#pinMsg').textContent='تعذر الاتصال.';return;}
   const r=await c.auth.signInWithPassword({email:em,password:pw});
   if(r.error){$('#pinMsg').textContent='بيانات غلط، حاول تاني.';return;}
   enterDash(r.data.user.email);
@@ -244,30 +346,171 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelect
 
 // products
 function renderRows(){
- const rows=merged();
- $('#prodRows').innerHTML=rows.map(p=>`<tr class="prow" data-id="${p.id}">
-  <td><img src="${p.img}" alt="" onerror="this.style.opacity=.2"></td>
-  <td><input type="text" data-k="en" value="${(p.en||'').replace(/"/g,'&quot;')}"></td>
-  <td><input type="text" data-k="ar" value="${(p.ar||'').replace(/"/g,'&quot;')}"></td>
-  <td><input type="number" data-k="price" value="${p.price}" min="0"></td>
-  <td><input type="number" data-k="old" value="${p.old===null||p.old===undefined?'':p.old}" min="0" placeholder="—"></td>
-  <td style="text-align:center"><input type="checkbox" data-k="stock" ${p.stock?'checked':''} style="width:20px;height:20px"></td>
-  <td><input type="text" data-k="img" value="${p.img||''}" dir="ltr" style="font-size:11px"></td></tr>`).join('');
+ const rows=allProducts();
+ $('#prodRows').innerHTML=rows.map(p=>{
+  const im=(p.imgs&&p.imgs[0])||p.img||'';
+  return `<tr class="prow" data-id="${p.id}">
+  <td>${im?`<img src="${im}" alt="" onerror="this.style.opacity=.2">`:''}</td>
+  <td><b>${p.en||''}</b><br><span class="tiny">${p.ar||''}</span></td>
+  <td>${p.cat||''}</td><td><b>${p.price} EGP</b></td><td>${p.qty!=null?p.qty:'—'}</td>
+  <td>${p.stock?'✅':'❌'}</td>
+  <td style="white-space:nowrap"><button class="ghostb" style="padding:6px 12px" onclick="openEditor('${p.id}')">✏️</button>
+  <button class="del" onclick="delProduct('${p.id}')">🗑</button></td></tr>`;}).join('');
  const inStock=rows.filter(p=>p.stock).length;
  $('#stCount').textContent=rows.length;$('#stStock').textContent=inStock;
- $('#stAvg').textContent=Math.round(rows.reduce((a,p)=>a+Number(p.price||0),0)/rows.length);
+ $('#stAvg').textContent=rows.length?Math.round(rows.reduce((a,p)=>a+Number(p.price||0),0)/rows.length):0;
 }
-$('#saveProducts').onclick=()=>{
- const arr=[...document.querySelectorAll('.prow')].map(tr=>{
-  const o={id:Number(tr.dataset.id)};tr.querySelectorAll('[data-k]').forEach(inp=>{const k=inp.dataset.k;
-   if(inp.type==='checkbox')o[k]=inp.checked;else if(k==='price')o[k]=Number(inp.value||0);else if(k==='old')o[k]=inp.value===''?'':Number(inp.value);else o[k]=inp.value.trim();});return o;});
- const s=load();s.products=arr;save(s);renderRows();logAction('تعديل المنتجات',{count:arr.length});$('#msgP').textContent='✅ اتحفظ — شوف الموقع';setTimeout(()=>$('#msgP').textContent='',2500);
+window.openEditor=function(id){
+ const p=allProducts().find(x=>String(x.id)===String(id))||{id:'c'+Date.now().toString(36),cat:'tshirt',en:'',ar:'',price:100,old:'',stock:true,qty:10,weight:'',desc_en:'',desc_ar:'',seo_title:'',seo_desc:'',imgs:[]};
+ EDIT_ID=String(p.id);
+ $('#edTitle').textContent=(allProducts().some(x=>String(x.id)===String(id))?'تحرير: ':'منتج جديد: ')+(p.ar||p.en||'');
+ $('#e_en').value=p.en||'';$('#e_ar').value=p.ar||'';$('#e_cat').value=p.cat||'tshirt';
+ $('#e_price').value=p.price!=null?p.price:'';$('#e_old').value=(p.old==null||p.old==='')?'':p.old;
+ $('#e_qty').value=p.qty!=null?p.qty:'';$('#e_weight').value=p.weight||'';$('#e_stock').value=p.stock?'1':'0';
+ $('#e_den').value=p.desc_en||'';$('#e_dar').value=p.desc_ar||'';
+ $('#e_imgs').value=((p.imgs&&p.imgs.length?p.imgs:(p.img?[p.img]:[]))||[]).join('\n');
+ $('#e_st').value=p.seo_title||'';$('#e_sd').value=p.seo_desc||'';
+ $('#edMsg').textContent='';$('#editor').classList.add('show');
+};
+window.delProduct=function(id){
+ const p=allProducts().find(x=>String(x.id)===String(id));
+ if(!confirm('تحذف "'+(p?(p.ar||p.en):id)+'" نهائياً؟'))return;
+ const s=load();
+ const cur=Array.isArray(s.products)?s.products.slice():DEFAULTS.map(d=>({id:d.id,cat:d.cat,en:d.en,ar:d.ar,price:d.price,old:d.old,stock:d.stock,qty:d.qty,weight:d.weight,desc_en:d.desc_en,desc_ar:d.desc_ar,seo_title:d.seo_title,seo_desc:d.seo_desc,imgs:d.imgs}));
+ s.products=cur.filter(o=>String(o.id)!==String(id));
+ save(s);renderRows();logAction('حذف منتج',{id:String(id)});
+};
+$('#addProdBtn').onclick=()=>openEditor('c'+Date.now().toString(36));
+$('#edClose').onclick=()=>$('#editor').classList.remove('show');
+$('#edCopy').onclick=()=>{
+ const u='https://mmetwily1-sudo.github.io/varnoto/product.html?id='+EDIT_ID;
+ try{navigator.clipboard.writeText(u);$('#edMsg').textContent='✅ اتنسخ الرابط';}catch(e){prompt('انسخ الرابط:',u);}
+};
+$('#edSave').onclick=()=>{
+ const imgs=$('#e_imgs').value.split('\n').map(x=>x.trim()).filter(Boolean);
+ const o={id:isNaN(Number(EDIT_ID))?EDIT_ID:Number($('#e_price').value===''?'':EDIT_ID)||EDIT_ID,
+  cat:$('#e_cat').value.trim()||'tshirt',en:$('#e_en').value.trim(),ar:$('#e_ar').value.trim(),
+  price:Number($('#e_price').value||0),old:$('#e_old').value===''?'':Number($('#e_old').value),
+  stock:$('#e_stock').value==='1',qty:$('#e_qty').value===''?'':Number($('#e_qty').value),
+  weight:$('#e_weight').value.trim(),desc_en:$('#e_den').value.trim(),desc_ar:$('#e_dar').value.trim(),
+  seo_title:$('#e_st').value.trim(),seo_desc:$('#e_sd').value.trim(),imgs};
+ o.img=imgs[0]||'';
+ if(!/^\d+$/.test(String(EDIT_ID))) o.id=EDIT_ID;
+ const s=load();
+ const cur=Array.isArray(s.products)&&s.products.length?s.products.slice():DEFAULTS.map(d=>({id:d.id,cat:d.cat,en:d.en,ar:d.ar,price:d.price,old:d.old,stock:d.stock,qty:d.qty,weight:d.weight,desc_en:d.desc_en,desc_ar:d.desc_ar,seo_title:d.seo_title,seo_desc:d.seo_desc,imgs:d.imgs,img:(d.imgs||[])[0]||''}));
+ const ix=cur.findIndex(x=>String(x.id)===String(o.id));
+ if(ix>=0)cur[ix]=o;else cur.push(o);
+ s.products=cur;save(s);renderRows();logAction(ix>=0?'تعديل منتج':'إضافة منتج',{id:String(o.id)});
+ $('#edMsg').textContent='✅ اتحفظ';setTimeout(()=>{if(!$('#edMsg').textContent)return;},1);
+ setTimeout(()=>$('#editor').classList.remove('show'),700);
 };
 
-// texts
-function fillTexts(){const s=load();$('#ann_ar').value=(s.announce&&s.announce.ar)||'شحن مجاني للطلبات فوق 1999 جنيه 🚚';$('#ann_en').value=(s.announce&&s.announce.en)||'Free shipping on orders over 1999 EGP 🚚';$('#ht_ar').value=(s.hero&&s.hero.title_ar)||'أساسيات تقيلة، معمولة لمصر.';$('#ht_en').value=(s.hero&&s.hero.title_en)||'Heavyweight essentials, made for Egypt.';$('#hs_ar').value=(s.hero&&s.hero.sub_ar)||'تيشيرتات، قمصان لينن، جينز وايد ليج وسويت بانتس. قصّات نضيفة وأسعار واضحة بالجنيه.';$('#hs_en').value=(s.hero&&s.hero.sub_en)||'T-shirts, linen shirts, wide-leg jeans & sweatpants. Clean cuts, honest prices in EGP.';}
-fillTexts();
-$('#saveTexts').onclick=()=>{const s=load();s.announce={ar:$('#ann_ar').value,en:$('#ann_en').value};s.hero={title_ar:$('#ht_ar').value,title_en:$('#ht_en').value,sub_ar:$('#hs_ar').value,sub_en:$('#hs_en').value};save(s);logAction('تعديل النصوص',{});$('#msgT').textContent='✅ اتحفظ';setTimeout(()=>$('#msgT').textContent='',2500);};
+// sections
+function renderSecs(){
+ const secs=getSecs();
+ $('#secRows').innerHTML=secs.map((x,i)=>`<tr data-i="${i}">
+  <td><input type="text" data-k="id" value="${x.id||''}" dir="ltr"></td>
+  <td><input type="text" data-k="en" value="${(x.en||'').replace(/"/g,'&quot;')}"></td>
+  <td><input type="text" data-k="ar" value="${(x.ar||'').replace(/"/g,'&quot;')}"></td>
+  <td><input type="text" data-k="sub_en" value="${(x.sub_en||'').replace(/"/g,'&quot;')}"></td>
+  <td><input type="text" data-k="sub_ar" value="${(x.sub_ar||x.ar_sub||'').replace(/"/g,'&quot;')}"></td>
+  <td><input type="text" data-k="img" value="${x.img||''}" dir="ltr" style="font-size:11px"></td>
+  <td style="text-align:center"><input type="checkbox" data-k="visible" ${x.visible!==false?'checked':''} style="width:20px;height:20px"></td>
+  <td><button class="del" data-del="${i}">🗑</button></td></tr>`).join('');
+ document.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{
+  const s=load();const cur=(Array.isArray(s.sections)&&s.sections.length?s.sections.slice():getSecs());
+  cur.splice(Number(b.dataset.del),1);s.sections=cur;save(s);renderSecs();logAction('حذف قسم',{});
+ });
+}
+$('#addSecBtn').onclick=()=>{
+ const s=load();const cur=(Array.isArray(s.sections)&&s.sections.length?s.sections.slice():getSecs());
+ cur.push({id:'sec'+Date.now().toString(36),en:'New',ar:'جديد',sub_en:'',sub_ar:'',img:'',visible:true});
+ s.sections=cur;save(s);renderSecs();
+};
+$('#saveSecs').onclick=()=>{
+ const arr=[...document.querySelectorAll('#secRows tr')].map(tr=>{
+  const o={};tr.querySelectorAll('[data-k]').forEach(inp=>{const k=inp.dataset.k;
+   o[k]=inp.type==='checkbox'?inp.checked:inp.value.trim();});return o;});
+ const s=load();s.sections=arr;save(s);logAction('تعديل الأقسام',{count:arr.length});
+ $('#msgS').textContent='✅ اتحفظ';setTimeout(()=>$('#msgS').textContent='',2500);
+};
+
+// theme
+function fillTheme(){
+ const s=load(),th=s.theme||{};
+ const c=th.colors||{};
+ $('#th_bg').value=c.bg||'#faf9f7';$('#th_ink').value=c.ink||'#141414';$('#th_acc').value=c.acc||'#c9a24b';
+ const an=th.announce||s.announce||{};
+ $('#ann_ar').value=an.ar||'شحن مجاني للطلبات فوق 1999 جنيه 🚚';$('#ann_en').value=an.en||'Free shipping on orders over 1999 EGP 🚚';
+ const hr=th.hero||s.hero||{};
+ $('#ht_ar').value=hr.title_ar||'أساسيات تقيلة، معمولة لمصر.';$('#ht_en').value=hr.title_en||'Heavyweight essentials, made for Egypt.';
+ $('#hs_ar').value=hr.sub_ar||'تيشيرتات، قمصان لينن، جينز وايد ليج وسويت بانتس. قصّات نضيفة وأسعار واضحة بالجنيه.';$('#hs_en').value=hr.sub_en||'T-shirts, linen shirts, wide-leg jeans & sweatpants. Clean cuts, honest prices in EGP.';
+ $('#th_hero_pick').innerHTML='<option value="">— اختار من صور الموقع —</option>'+ASSETS.map(a=>`<option value="${a}">${a}</option>`).join('');
+ $('#th_hero').value=th.hero_img||hr.img||'';
+ const hd=th.headings||{};
+ $('#hc_ar').value=hd.col_ar||'تصفّح المجموعة';$('#hc_en').value=hd.col_en||'Browse the Collection';
+ $('#hb_ar').value=hd.best_ar||'الأكثر مبيعاً';$('#hb_en').value=hd.best_en||'Best Selling';
+ const sh=th.show||{};
+ $('#sh_col').checked=sh.collections!==false;$('#sh_about').checked=sh.about!==false;$('#sh_contact').checked=sh.contact!==false;
+}
+$('#th_hero_pick').onchange=e=>{if(e.target.value)$('#th_hero').value=e.target.value;};
+$('#saveTheme').onclick=()=>{
+ const s=load();
+ s.theme={colors:{bg:$('#th_bg').value,ink:$('#th_ink').value,acc:$('#th_acc').value},
+  announce:{ar:$('#ann_ar').value,en:$('#ann_en').value},
+  hero:{title_ar:$('#ht_ar').value,title_en:$('#ht_en').value,sub_ar:$('#hs_ar').value,sub_en:$('#hs_en').value,img:$('#th_hero').value.trim()},
+  hero_img:$('#th_hero').value.trim(),
+  headings:{col_ar:$('#hc_ar').value,col_en:$('#hc_en').value,best_ar:$('#hb_ar').value,best_en:$('#hb_en').value},
+  show:{collections:$('#sh_col').checked,about:$('#sh_about').checked,contact:$('#sh_contact').checked}};
+ save(s);logAction('تعديل الثيم',{});
+ $('#msgTh').textContent='✅ اتحفظ';setTimeout(()=>$('#msgTh').textContent='',2500);
+};
+
+// header/footer
+function fillHF(){
+ const s=load();
+ const links=(s.header&&s.header.links)||DEFAULT_NAV;
+ $('#navRows').innerHTML=links.map((l,i)=>`<tr data-i="${i}"><td><input type="text" data-k="en" value="${(l.en||'').replace(/"/g,'&quot;')}"></td><td><input type="text" data-k="ar" value="${(l.ar||'').replace(/"/g,'&quot;')}"></td><td><input type="text" data-k="href" value="${(l.href||'').replace(/"/g,'&quot;')}" dir="ltr"></td><td><button class="del" data-navdel="${i}">🗑</button></td></tr>`).join('');
+ document.querySelectorAll('[data-navdel]').forEach(b=>b.onclick=()=>{b.closest('tr').remove();});
+ const ft=s.footer||{};
+ $('#ft_ar').value=ft.about_ar||'براند مصري للأساسيات. القاهرة، مصر.';$('#ft_en').value=ft.about_en||'Egyptian essentials brand. Cairo, Egypt.';
+ $('#ft_note').value=ft.note||'© 2026 VARNOTO — varnoto.com';
+}
+$('#addNavBtn').onclick=()=>{$('#navRows').insertAdjacentHTML('beforeend','<tr><td><input type="text" data-k="en" value="New"></td><td><input type="text" data-k="ar" value="جديد"></td><td><input type="text" data-k="href" value="#home" dir="ltr"></td><td><button class="del" onclick="this.closest(\'tr\').remove()">🗑</button></td></tr>');};
+$('#saveHF').onclick=()=>{
+ const links=[...document.querySelectorAll('#navRows tr')].map(tr=>{const o={};tr.querySelectorAll('[data-k]').forEach(i=>o[i.dataset.k]=i.value.trim());return o;}).filter(l=>l.en||l.ar);
+ const s=load();s.header={links};
+ s.footer={about_ar:$('#ft_ar').value,about_en:$('#ft_en').value,note:$('#ft_note').value};
+ save(s);logAction('تعديل الهيدر والفوتر',{});
+ $('#msgHF').textContent='✅ اتحفظ';setTimeout(()=>$('#msgHF').textContent='',2500);
+};
+
+// pages
+function fillPg(){
+ const s=load(),pg=(s.pages||{})[$('#pg_sel').value]||{};
+ $('#pg_tar').value=pg.title_ar||'';$('#pg_ten').value=pg.title_en||'';
+ $('#pg_bar').value=pg.body_ar||'';$('#pg_ben').value=pg.body_en||'';
+}
+$('#pg_sel').onchange=fillPg;
+$('#savePg').onclick=()=>{
+ const s=load();s.pages=s.pages||{};
+ s.pages[$('#pg_sel').value]={title_ar:$('#pg_tar').value,title_en:$('#pg_ten').value,body_ar:$('#pg_bar').value,body_en:$('#pg_ben').value};
+ save(s);logAction('تعديل صفحة تعريفية',{page:$('#pg_sel').value});
+ $('#msgPg').textContent='✅ اتحفظ';setTimeout(()=>$('#msgPg').textContent='',2500);
+};
+
+// seo site
+function fillSEO(){
+ const s=load(),seo=s.seo||{};
+ $('#seo_t').value=seo.site_title||'VARNOTO | ملابس مصرية عصرية';
+ $('#seo_d').value=seo.site_desc||'VARNOTO — براند ملابس مصري: تيشيرتات، قمصان لينن، جينز، سويت بانتس. خامات تقيلة وشحن سريع.';
+ $('#seo_og').value=seo.og_image||'assets/hero.jpg';
+}
+$('#saveSEO').onclick=()=>{
+ const s=load();s.seo={site_title:$('#seo_t').value.trim(),site_desc:$('#seo_d').value.trim(),og_image:$('#seo_og').value.trim()};
+ save(s);logAction('تعديل SEO الموقع',{});
+ $('#msgSEO').textContent='✅ اتحفظ';setTimeout(()=>$('#msgSEO').textContent='',2500);
+};
 
 // contact
 function fillC(){const s=load();$('#c_wa').value=(s.contact&&s.contact.whatsapp)||'201000000000';$('#c_ig').value=(s.contact&&s.contact.instagram)||'';$('#c_tt').value=(s.contact&&s.contact.tiktok)||'';}
@@ -291,7 +534,7 @@ function renderOrders(rows){
  const news=rows.filter(o=>o.status==='new').length;
  $('#stOrders').textContent=news;
  const b=$('#ordBdg');b.style.display=news?'inline-block':'none';b.textContent=news;
- $('#ordRows').innerHTML=rows.length?rows.map(o=>`<tr data-oid="${o.id}">
+ $('#ordRows').innerHTML=rows.length?rows.map(o=>`<tr>
   <td><b>#${o.id}</b></td><td style="font-size:12px">${fmtDate(o.created_at)}</td>
   <td>${(o.customer_name||'—')}<br><span class="tiny" dir="ltr">${(o.customer_phone||'')}</span></td>
   <td style="font-size:12px">${itemsTxt(o.items)}</td><td><b>${o.total} EGP</b></td>
@@ -308,7 +551,7 @@ async function setStatus(id,st){
  }catch(e){alert('تعذر التحديث');}
 }
 let knownIds=new Set(), firstLoad=true;
-function beep(){try{const A=new (window.AudioContext||window.webkitAudioContext)();const o=A.createOscillator(),g=A.createGain();o.connect(g);g.connect(A.destination);o.frequency.value=880;g.gain.value=.12;o.start();[0,.18,.36].forEach((t,i)=>{o.frequency.setValueAtTime([880,660,990][i],A.currentTime+t);});o.stop(A.currentTime+.6);}catch(e){}}
+function beep(){try{const A=new (window.AudioContext||window.webkitAudioContext)();const o=A.createOscillator(),g=A.createGain();o.connect(g);g.connect(A.destination);o.frequency.value=880;g.gain.value=.12;o.start();[0,.18,.36].forEach((tt,i)=>{o.frequency.setValueAtTime([880,660,990][i],A.currentTime+tt);});o.stop(A.currentTime+.6);}catch(e){}}
 function subscribeOrders(){
  try{
   const c=sb();if(!c)return;
@@ -319,8 +562,7 @@ function subscribeOrders(){
    loadOrders();
   }).subscribe();
  }catch(e){}
- loadOrders().then&&null;
- setInterval(async()=>{ // fallback poll every 30s
+ setInterval(async()=>{
   try{
    const h=await H();
    const r=await fetch(SUPA_URL+'/rest/v1/orders?select=id&order=created_at.desc&limit=20',{headers:h});
@@ -350,7 +592,8 @@ $('#expBtn').onclick=()=>{const blob=new Blob([localStorage.getItem(KEY)||'{}'],
 $('#impFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(r.result);save(o);logAction('استرجاع نسخة',{});location.reload();}catch(err){alert('ملف غير صالح');}};r.readAsText(f);};
 $('#resetBtn').onclick=()=>{if(confirm('متأكد؟ هيرجع كل حاجة للوضع الأصلي.')){localStorage.removeItem(KEY);location.reload();}};
 
-renderRows();
+function fillAll(){renderRows();renderSecs();fillTheme();fillHF();fillPg();fillSEO();fillC();}
+fillAll();
 </script>
 </body>
 </html>

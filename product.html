@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="seoTitle">VARNOTO</title>
+<meta name="description" id="seoDesc" content="VARNOTO — Modern Menswear">
+<link rel="canonical" id="seoCanon" href="https://mmetwily1-sudo.github.io/varnoto/">
+<meta property="og:type" content="product">
+<meta property="og:site_name" content="VARNOTO">
+<meta property="og:title" id="ogTitle" content="VARNOTO">
+<meta property="og:description" id="ogDesc" content="VARNOTO — Modern Menswear">
+<meta property="og:image" id="ogImg" content="https://mmetwily1-sudo.github.io/varnoto/assets/hero.jpg">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="stylesheet" href="style.css?v=2">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>.pwrap{max-width:1080px;margin:0 auto;padding:30px 18px 60px;display:grid;grid-template-columns:1fr 1fr;gap:26px}@media(max-width:800px){.pwrap{grid-template-columns:1fr}}.gal-main{border-radius:18px;overflow:hidden;border:1px solid var(--line);background:#ece7de}.gal-main img{width:100%;max-height:560px;object-fit:cover;display:block}.mthumbs{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}.mthumbs img{width:64px;height:78px;object-fit:cover;border-radius:10px;cursor:pointer;opacity:.6;border:2px solid transparent}.mthumbs img.on{opacity:1;border-color:var(--acc)}.pinfo h1{font-size:30px;margin-bottom:6px}.pinfo .price{font-size:24px;font-weight:800;margin:10px 0}.pinfo .old{color:var(--mut);text-decoration:line-through;font-weight:400;font-size:16px}.pinfo p.desc{line-height:2;color:#333;margin:12px 0}.qtyrow{display:flex;gap:10px;align-items:center;margin:14px 0}.qtyrow button{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:18px;cursor:pointer;font-family:inherit}.rel{margin-top:44px}.back{display:inline-block;margin-top:8px}</style>
+</head>
+<body>
+<div class="announce" id="announce">شحن مجاني للطلبات فوق 1999 جنيه 🚚</div>
+<header class="header"><div class="container header-in">
+<a class="logo" href="index.html"><img src="assets/logo.svg" alt="VARNOTO"></a>
+<div class="actions"><button class="lang-btn" id="langBtn">EN</button><a class="icon-btn cart-btn" style="text-decoration:none" href="index.html#best">🛒</a></div>
+</div></header>
+<main class="pwrap" id="pwrap"><p class="tiny">جاري التحميل...</p></main>
+<section class="section" id="relSec" style="display:none"><div class="container"><h2 id="relTitle">قد يعجبك أيضاً</h2><div class="grid products" id="relGrid" style="margin-top:16px"></div></div></section>
+<footer class="footer"><div class="copy">© 2026 VARNOTO — varnoto.com</div></footer>
+<script>
+const KEY='varnoto_store_v1', SUPA_URL='https://xgokhpdhzafuluiqdtah.supabase.co', SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnb2tocGRoemFmdWx1aXFkdGFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5NjU0NDMsImV4cCI6MjEwNDU0MTQ0M30.2B-0GPvxh5KoXVM4jhN06hCt75LakazSC36bh637zQA';
+const DEFAULTS=[
+ {id:1,cat:'tshirt',en:'Essential White Tee',ar:'تيشيرت أبيض أساسي',price:350,old:null,stock:true,qty:20,weight:'',desc_en:'',desc_ar:'',seo_title:'',seo_desc:'',img:'assets/p-tee-white.jpg',imgs:['assets/p-tee-white.jpg']},
+ {id:2,cat:'tshirt',en:'Essential Black Tee',ar:'تيشيرت أسود أساسي',price:350,old:450,stock:true,qty:20,weight:'',desc_en:'',desc_ar:'',seo_title:'',seo_desc:'',img:'assets/p-tee-black.jpg',imgs:['assets/p-tee-black.jpg']},
+ {id:3,cat:'sweat',en:'Oversized Grey Sweatshirt',ar:'سويت شيرت رمادي أوفرسايز',price:600,old:null,stock:true,qty:20,weight:'',desc_en:'',desc_ar:'',seo_title:'',seo_desc:'',img:'assets/p-sweatshirt-grey.jpg',imgs:['assets/p-sweatshirt-grey.jpg']},
+ {id:4,cat:'sweat',en:'Lounge Set — Cream',ar:'طقم لاونج — كريمي',price:700,old:null,stock:true,qty:20,weight:'',desc_en:'',desc_ar:'',seo_title:'',seo_desc:'',img:'assets/p-lounge-cream.jpg',imgs:['assets/p-lounge-cream.jpg']},
+ {id:5,cat:'linen',en:'Summer Striped Shirt',ar:'قميص صيفي مخطط',price:750,old:null,stock:true,qty:20,weight:'',desc_en:'',desc_ar:'',seo_title:'',seo_desc:'',img:'assets/p-shirt-summer.jpg',imgs:['assets/p-shirt-summer.jpg']},
+ {id:6,cat:'linen',en:'Black Evening Shirt',ar:'قميص أسود أنيق',price:750,old:850,stock:true,qty:20,weight:'',desc_en:'',desc_ar:'',seo_title:'',seo_desc:'',img:'assets/p-shirt-black.jpg',imgs:['assets/p-shirt-black.jpg']},
+ {id:7,cat:'jeans',en:'Wide-Leg Jeans — Ice Blue',ar:'جينز وايد ليج — أزرق ثلجي',price:900,old:null,stock:true,qty:20,weight:'',desc_en:'',desc_ar:'',seo_title:'',seo_desc:'',img:'assets/p-jeans-ice.jpg',imgs:['assets/p-jeans-ice.jpg']},
+ {id:8,cat:'jeans',en:'Wide-Leg Jeans — Raw',ar:'جينز وايد ليج — خام',price:900,old:null,stock:true,qty:20,weight:'',desc_en:'',desc_ar:'',seo_title:'',seo_desc:'',img:'assets/p-jeans-raw.jpg',imgs:['assets/p-jeans-raw.jpg']},
+ {id:9,cat:'tank',en:'Heavyweight Tank — White',ar:'تانك توب تقيل — أبيض',price:400,old:null,stock:true,qty:20,weight:'',desc_en:'',desc_ar:'',seo_title:'',seo_desc:'',img:'assets/p-tank-white.jpg',imgs:['assets/p-tank-white.jpg']},
+ {id:10,cat:'tank',en:'Heavyweight Tank — Black',ar:'تانك توب تقيل — أسود',price:400,old:null,stock:true,qty:20,weight:'',desc_en:'',desc_ar:'',seo_title:'',seo_desc:'',img:'assets/p-tank-black.jpg',imgs:['assets/p-tank-black.jpg']},
+ {id:11,cat:'knit',en:'Two-Tone Knitted Polo',ar:'بولو نيت تو-تون',price:750,old:null,stock:true,qty:20,weight:'',desc_en:'',desc_ar:'',seo_title:'',seo_desc:'',img:'assets/p-polo-duo.jpg',imgs:['assets/p-polo-duo.jpg']},
+ {id:12,cat:'tailored',en:'Tailored Pants — Beige',ar:'بنطلون كلاسيك — بيج',price:850,old:null,stock:true,qty:20,weight:'',desc_en:'',desc_ar:'',seo_title:'',seo_desc:'',img:'assets/p-pants-beige.jpg',imgs:['assets/p-pants-beige.jpg']}
+];
+const $=s=>document.querySelector(s);
+let L='ar', P=null, Q=1;
+const t=(en,ar)=>L==='ar'?ar:en;
+function absUrl(r){try{return new URL(r,document.baseURI).href;}catch(e){return r;}}
+async function boot(){
+ const id=new URLSearchParams(location.search).get('id');
+ let store={}; try{store=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){}
+ try{
+  const r=await fetch(SUPA_URL+'/rest/v1/store_config?id=eq.1&select=data',{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY}});
+  const j=await r.json(); const d=j&&j[0]&&j[0].data;
+  if(d){store=Object.assign({},store,d);try{localStorage.setItem(KEY,JSON.stringify(store));}catch(e){}}
+ }catch(e){}
+ const list=DEFAULTS.map(x=>Object.assign({},x));
+ if(Array.isArray(store.products)&&store.products.length){
+  const byId={};store.products.forEach(o=>{if(o&&o.id!=null)byId[String(o.id)]=o;});
+  list.forEach(p=>{const o=byId[String(p.id)];if(o)Object.assign(p,o);});
+  const known=new Set(list.map(p=>String(p.id)));
+  store.products.forEach(o=>{if(o&&o.id!=null&&!known.has(String(o.id))){const np=Object.assign({price:0,old:null,stock:true,qty:10,imgs:[]},o);np.imgs=(np.imgs&&np.imgs.length?np.imgs:(np.img?[np.img]:[]));list.push(np);}});
+ }
+ P=list.find(p=>String(p.id)===String(id))||list[0];
+ render(store,list);
+}
+function render(store,list){
+ const name=t(P.en,P.ar), desc=t(P.desc_ar&&P.desc_ar?P.desc_ar:P.desc_en&&P.desc_en?P.desc_en:'',P.desc_en&&P.desc_en?P.desc_en:P.desc_ar&&P.desc_ar?P.desc_ar:'');
+ const seoT=P.seo_title||name+' | VARNOTO', seoD=P.seo_desc||desc||name;
+ document.title=seoT;$('#seoDesc').setAttribute('content',seoD);
+ $('#seoCanon').setAttribute('content','https://mmetwily1-sudo.github.io/varnoto/product.html?id='+P.id);
+ $('#ogTitle').setAttribute('content',seoT);$('#ogDesc').setAttribute('content',seoD);
+ if(P.img)$('#ogImg').setAttribute('content',absUrl(P.img));
+ const imgs=(P.imgs&&P.imgs.length?P.imgs:(P.img?[P.img]:[]));
+ const meta=[];if(P.stock)meta.push(t('متاح: '+P.qty+' قطعة','In stock: '+P.qty));if(P.weight)meta.push(t('الوزن: '+P.weight,'Weight: '+P.weight));
+ $('#pwrap').innerHTML=`
+  <div><div class="gal-main">${imgs[0]?`<img id="gMain" src="${imgs[0]}" alt="">`:''}</div>
+  ${imgs.length>1?`<div class="mthumbs">${imgs.map((u,i)=>`<img src="${u}" class="${i===0?'on':''}" alt="">`).join('')}</div>`:''}</div>
+  <div class="pinfo">
+   <h1>${name}</h1>
+   <div class="price">${P.price} EGP ${P.old?`<span class="old">${P.old} EGP</span>`:''}</div>
+   <p class="tiny" style="color:var(--acc);font-weight:700">${meta.join(' • ')}</p>
+   <p class="desc">${desc||t('خامة تقيلة صناعة مصرية. مقاسات S–XXL. استبدال 14 يوم ودفع عند الاستلام.','Heavyweight fabric, Egyptian made. Sizes S–XXL. 14-day exchange, COD available.')}</p>
+   <div class="sizes"><span>S</span><span>M</span><span>L</span><span>XL</span><span>XXL</span></div>
+   <div class="qtyrow"><button id="qm">−</button><b id="qv">1</b><button id="qp">+</button>
+   <button class="btn primary" id="pAdd" style="flex:1;background:#141414;border-color:#141414" ${P.stock?'':'disabled'}>${P.stock?t('ضيف للسلة','Add to cart'):t('نفد المخزون','Sold out')}</button></div>
+   <a class="link" href="index.html">→ ${t('العودة للمتجر','Back to store')}</a>
+  </div>`;
+ document.querySelectorAll('.mthumbs img').forEach(th=>th.onclick=()=>{const m=$('#gMain');if(m)m.src=th.src;document.querySelectorAll('.mthumbs img').forEach(x=>x.classList.toggle('on',x===th));});
+ $('#qm').onclick=()=>{Q=Math.max(1,Q-1);$('#qv').textContent=Q;};
+ $('#qp').onclick=()=>{Q=Math.min(P.qty||99,Q+1);$('#qv').textContent=Q;};
+ const ld={'@context':'https://schema.org','@type':'Product',name:P.seo_title||P.en,image:P.img?absUrl(P.img):undefined,description:P.seo_desc||P.desc_en||P.en,brand:{'@type':'Brand',name:'VARNOTO'},offers:{'@type':'Offer',priceCurrency:'EGP',price:P.price,availability:P.stock?'https://schema.org/InStock':'https://schema.org/OutOfStock'}};
+ const sc=document.createElement('script');sc.type='application/ld+json';sc.textContent=JSON.stringify(ld);document.head.appendChild(sc);
+ $('#pAdd').onclick=()=>{
+  let cart=[];try{cart=JSON.parse(localStorage.getItem('varnoto_cart'))||[];}catch(e){}
+  const f=cart.find(x=>String(x.id)===String(P.id));
+  if(f)f.q+=Q;else cart.push({id:String(P.id),q:Q});
+  try{localStorage.setItem('varnoto_cart',JSON.stringify(cart));}catch(e){}
+  alert(t('اتضافت للسلة ✅','Added to cart ✅'));
+ };
+ const rel=list.filter(x=>String(x.id)!==String(P.id)&&String(x.cat)===String(P.cat)).slice(0,4);
+ if(rel.length){$('#relSec').style.display='';$('#relGrid').innerHTML=rel.map(x=>`<div class="card"><div class="thumb"><a href="product.html?id=${x.id}">${x.img?`<img src="${x.img}" alt="" loading="lazy">`:''}</a></div><div class="p-body"><b><a href="product.html?id=${x.id}" style="color:inherit;text-decoration:none">${t(x.en,x.ar)}</a></b><div class="price">${x.price} EGP</div></div></div>`).join('');}
+}
+$('#langBtn').onclick=()=>{L=L==='ar'?'en':'ar';document.documentElement.lang=L;document.documentElement.dir=L==='ar'?'rtl':'ltr';$('#langBtn').textContent=L==='ar'?'EN':'عربي';boot();};
+boot();
+</script>
+</body>
+</html>

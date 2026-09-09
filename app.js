@@ -36,15 +36,39 @@ function getStore(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY))||{}
 })();
 function applyStoreProducts(s){
   s=s||getStore();
-  if(!Array.isArray(s.products)||!s.products.length) return;
-  const byId={}; s.products.forEach(o=>{ if(o&&o.id!=null) byId[o.id]=o; });
+  if(Array.isArray(s.products)&&s.products.length){
+    const byId={}; s.products.forEach(o=>{ if(o&&o.id!=null) byId[String(o.id)]=o; });
+    PRODUCTS.forEach(p=>{
+      const o=byId[String(p.id)]; if(!o) return;
+      if(o.en) p.en=o.en; if(o.ar) p.ar=o.ar; if(o.cat) p.cat=o.cat;
+      if(o.price!==undefined&&o.price!==''&&o.price!==null) p.price=Number(o.price);
+      p.old=(o.old===undefined||o.old===''||o.old===null)?null:Number(o.old);
+      if(o.stock!==undefined) p.stock=!!o.stock;
+      if(o.qty!==undefined&&o.qty!==''&&o.qty!==null) p.qty=Number(o.qty);
+      if(o.weight!==undefined) p.weight=o.weight;
+      if(o.desc_en!==undefined) p.desc_en=o.desc_en;
+      if(o.desc_ar!==undefined) p.desc_ar=o.desc_ar;
+      if(o.seo_title!==undefined) p.seo_title=o.seo_title;
+      if(o.seo_desc!==undefined) p.seo_desc=o.seo_desc;
+      if(o.img) p.img=o.img;
+      if(Array.isArray(o.imgs)&&o.imgs.length) p.imgs=o.imgs.filter(Boolean);
+    });
+    const known=new Set(PRODUCTS.map(p=>String(p.id)));
+    s.products.forEach(o=>{
+      if(!o||o.id==null||known.has(String(o.id))) return;
+      const np=Object.assign({cat:'tshirt',en:'New product',ar:'منتج جديد',price:100,old:null,stock:true,qty:10,weight:'',desc_en:'',desc_ar:'',seo_title:'',seo_desc:'',img:'',imgs:[]},o);
+      np.imgs=(Array.isArray(np.imgs)&&np.imgs.length?np.imgs:(np.img?[np.img]:[])).filter(Boolean);
+      if(!np.img&&np.imgs.length) np.img=np.imgs[0];
+      PRODUCTS.push(np);
+    });
+  }
   PRODUCTS.forEach(p=>{
-    const o=byId[p.id]; if(!o) return;
-    if(o.en) p.en=o.en; if(o.ar) p.ar=o.ar;
-    if(o.price!==undefined&&o.price!==''&&o.price!==null) p.price=Number(o.price);
-    p.old=(o.old===undefined||o.old===''||o.old===null)?null:Number(o.old);
-    if(o.stock!==undefined) p.stock=!!o.stock;
-    if(o.img) p.img=o.img;
+    if(p.qty==null||p.qty==='') p.qty=(p.stock===false)?0:20;
+    if(p.weight==null) p.weight='';
+    if(!p.desc_en) p.desc_en=''; if(!p.desc_ar) p.desc_ar='';
+    if(!p.seo_title) p.seo_title=''; if(!p.seo_desc) p.seo_desc='';
+    if(!Array.isArray(p.imgs)||!p.imgs.length) p.imgs=p.img?[p.img]:[];
+    if(!p.img&&p.imgs.length) p.img=p.imgs[0];
   });
 }
 
@@ -53,68 +77,94 @@ let filter = 'all', query = '';
 
 function t(en, ar){ return LANG === 'ar' ? ar : en; }
 
+function getSections(){
+  const s=getStore();
+  if(Array.isArray(s.sections)&&s.sections.length)
+    return s.sections.filter(x=>x&&x.visible!==false).map(x=>({id:String(x.id),en:x.en||x.id,ar:x.ar||x.en||x.id,sub_en:x.sub_en||'',sub_ar:x.ar_sub||x.sub_ar||'',img:x.img||''}));
+  return COLLECTIONS.map(x=>({id:String(x.id),en:x.en,ar:x.ar,sub_en:x.en_sub,sub_ar:x.ar_sub,img:x.img}));
+}
+function renderFilters(){
+  const secs=getSections().filter(s=>PRODUCTS.some(p=>String(p.cat)===String(s.id)));
+  const box=$('#filters'); if(!box) return;
+  box.innerHTML=`<button class="chip${filter==='all'?' active':''}" data-f="all">${t('All','الكل')}</button>`+
+    secs.map(s=>`<button class="chip${String(filter)===String(s.id)?' active':''}" data-f="${s.id}">${t(s.en,s.ar)}</button>`).join('');
+  box.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{filter=c.dataset.f;renderFilters();renderProducts();});
+}
 function renderCollections(){
-  $('#collectionsGrid').innerHTML = COLLECTIONS.map(x=>`
+  const box=$('#collectionsGrid'); if(!box) return;
+  box.innerHTML = getSections().map(x=>`
     <div class="card" onclick="setFilter('${x.id}')">
       <div class="thumb" onclick="setFilter('${x.id}')">
-        <img src="${x.img}" alt="${x.en}" loading="lazy">
+        ${x.img?`<img src="${x.img}" alt="${x.en}" loading="lazy">`:`<div style="height:230px;background:#ece7de"></div>`}
         <span class="thumb-label">${t(x.en,x.ar)}</span>
       </div>
-      <div class="p-body"><b>${t(x.en,x.ar)}</b><span class="tiny">${t(x.en_sub,x.ar_sub)}</span></div>
+      <div class="p-body"><b>${t(x.en,x.ar)}</b><span class="tiny">${t(x.sub_en,x.sub_ar)}</span></div>
     </div>`).join('');
 }
 
 function renderProducts(){
+  const box=$('#productsGrid'); if(!box) return;
   const list = PRODUCTS.filter(p =>
-    (filter==='all' || p.cat===filter) &&
+    (filter==='all' || String(p.cat)===String(filter)) &&
     (!query || (p.en+p.ar).toLowerCase().includes(query.toLowerCase()))
   );
-  $('#productsGrid').innerHTML = list.length ? list.map(p=>`
+  box.innerHTML = list.length ? list.map(p=>`
     <div class="card">
-      <div class="thumb" onclick="quick(${p.id})">
-        <img src="${p.img}" alt="${p.en}" loading="lazy">
-        ${!p.stock ? `<span class="badge out">${t('Sold out','نفد المخزون')}</span>` : (p.old?`<span class="badge">-${Math.round((1-p.price/p.old)*100)}%</span>`:'')}
+      <div class="thumb" onclick="quick('${p.id}')">
+        ${p.img?`<img src="${p.img}" alt="${(p.en||'').replace(/"/g,'')}" loading="lazy">`:''}
+        ${!p.stock ? `<span class="badge out">${t('Sold out','نفد المخزون')}</span>` : (p.old?`<span class="badge">-${Math.round((1-p.price/p.old)*100)}%</span>`:(p.qty>0&&p.qty<=5?`<span class="badge">${t('Only '+p.qty+' left','باقي '+p.qty+' بس')}</span>`:''))}
       </div>
       <div class="p-body">
-        <b onclick="quick(${p.id})">${t(p.en,p.ar)}</b>
+        <b onclick="quick('${p.id}')">${t(p.en,p.ar)}</b>
         <div class="price">${p.price} EGP ${p.old?`<span class="old">${p.old} EGP</span>`:''}</div>
-        <button class="add" ${!p.stock?'disabled':''} onclick="addToCart(${p.id})">${!p.stock?t('Sold out','نفد'):t('Add to cart','ضيف للسلة')}</button>
+        <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="add" style="margin-top:0;flex:1" ${!p.stock?'disabled':''} onclick="addToCart('${p.id}')">${!p.stock?t('Sold out','نفد'):t('Add to cart','ضيف للسلة')}</button>
+        <a class="add" style="margin-top:0;text-align:center;text-decoration:none;background:#fff;color:#141414" href="product.html?id=${p.id}">${t('Details','التفاصيل')}</a>
+        </div>
       </div>
     </div>`).join('') : `<p>${t('No products found.','مفيش منتجات مطابقة.')}</p>`;
 }
 
-function saveCart(){ localStorage.setItem('varnoto_cart', JSON.stringify(cart)); renderCart(); }
+function saveCart(){ const sc=$('#cartCount'); localStorage.setItem('varnoto_cart', JSON.stringify(cart)); renderCart(); }
+function findP(id){ return PRODUCTS.find(x=>String(x.id)===String(id)); }
 function addToCart(id){
-  const p = PRODUCTS.find(x=>x.id===id); if(!p||!p.stock) return;
-  const f = cart.find(x=>x.id===id);
-  if(f) f.q++; else cart.push({id,q:1});
+  const p = findP(id); if(!p||!p.stock) return;
+  const f = cart.find(x=>String(x.id)===String(id));
+  if(f) f.q++; else cart.push({id:String(p.id),q:1});
   saveCart(); openCart();
 }
 function renderCart(){
-  $('#cartCount').textContent = cart.reduce((a,b)=>a+b.q,0);
-  const box = $('#cartItems');
+  const cc=$('#cartCount'); if(cc) cc.textContent = cart.reduce((a,b)=>a+b.q,0);
+  const box = $('#cartItems'); if(!box) return;
   if(!cart.length){ box.innerHTML = `<p class="tiny">${t('Your cart is empty.','سلتك فاضية.')}</p>`; $('#cartTotal').textContent='0 EGP'; return; }
   box.innerHTML = cart.map(r=>{
-    const p = PRODUCTS.find(x=>x.id===r.id);
-    return `<div class="cart-row"><img class="dot" src="${p.img}" alt="">
+    const p = findP(r.id); if(!p) return '';
+    return `<div class="cart-row"><img class="dot" src="${p.img||''}" alt="">
       <div style="flex:1"><b>${t(p.en,p.ar)}</b><span class="tiny">${p.price} EGP</span>
-      <div class="qty"><button onclick="chQty(${p.id},-1)">−</button><span>${r.q}</span><button onclick="chQty(${p.id},1)">+</button></div></div>
-      <button onclick="rmItem(${p.id})" style="border:none;background:none;cursor:pointer">🗑</button></div>`;
+      <div class="qty"><button onclick="chQty('${p.id}',-1)">−</button><span>${r.q}</span><button onclick="chQty('${p.id}',1)">+</button></div></div>
+      <button onclick="rmItem('${p.id}')" style="border:none;background:none;cursor:pointer">🗑</button></div>`;
   }).join('');
-  const total = cart.reduce((a,r)=>a+PRODUCTS.find(x=>x.id===r.id).price*r.q,0);
+  const total = cart.reduce((a,r)=>{const p=findP(r.id);return a+(p?p.price*r.q:0);},0);
   $('#cartTotal').textContent = total + ' EGP';
 }
-function chQty(id,d){ const r=cart.find(x=>x.id===id); if(!r) return; r.q+=d; if(r.q<1) cart=cart.filter(x=>x.id!==id); saveCart(); }
-function rmItem(id){ cart=cart.filter(x=>x.id!==id); saveCart(); }
+function chQty(id,d){ const r=cart.find(x=>String(x.id)===String(id)); if(!r) return; r.q+=d; if(r.q<1) cart=cart.filter(x=>String(x.id)!==String(id)); saveCart(); }
+function rmItem(id){ cart=cart.filter(x=>String(x.id)!==String(id)); saveCart(); }
 window.chQty=chQty; window.rmItem=rmItem; window.addToCart=addToCart;
 
 window.quick = (id)=>{
-  const p = PRODUCTS.find(x=>x.id===id);
-  $('#mImg').innerHTML = `<img src="${p.img}" alt="${p.en}">`;
+  const p = findP(id); if(!p) return;
+  const imgs=(p.imgs&&p.imgs.length?p.imgs:(p.img?[p.img]:[]));
+  $('#mImg').innerHTML = (imgs[0]?`<img id="mMain" src="${imgs[0]}" alt="">`:'')+(imgs.length>1?`<div class="mthumbs">${imgs.map((u,i)=>`<img src="${u}" data-i="${i}" class="${i===0?'on':''}" alt="">`).join('')}</div>`:'');
+  document.querySelectorAll('.mthumbs img').forEach(th=>th.onclick=()=>{const m=$('#mMain');if(m)m.src=th.src;document.querySelectorAll('.mthumbs img').forEach(x=>x.classList.toggle('on',x===th));});
   $('#mName').textContent = t(p.en,p.ar);
   $('#mPrice').textContent = p.price+' EGP'+(p.old?' (was '+p.old+' EGP)':'');
-  $('#mDesc').textContent = t('Heavyweight fabric, Egyptian made. Sizes S–XXL. 14-day exchange, COD available.','خامة تقيلة صناعة مصرية. مقاسات S–XXL. استبدال 14 يوم ودفع عند الاستلام.');
-  $('#mAdd').onclick = ()=>{ addToCart(id); closeModal(); };
+  const dd=LANG==='ar'?(p.desc_ar||''):(p.desc_en||'');
+  $('#mDesc').textContent = dd||t('Heavyweight fabric, Egyptian made. Sizes S–XXL. 14-day exchange, COD available.','خامة تقيلة صناعة مصرية. مقاسات S–XXL. استبدال 14 يوم ودفع عند الاستلام.');
+  const meta=[];
+  if(p.qty!=null&&p.stock) meta.push(t('In stock: '+p.qty,'متاح: '+p.qty+' قطعة'));
+  if(p.weight) meta.push(t('Weight: '+p.weight,'الوزن: '+p.weight));
+  const mm=$('#mMeta'); if(mm) mm.textContent=meta.join(' • ');
+  $('#mAdd').onclick = ()=>{ addToCart(p.id); closeModal(); };
   $('#mAdd').disabled = !p.stock;
   $('#mAdd').textContent = !p.stock ? t('Sold out','نفد المخزون') : t('Add to cart','ضيف للسلة');
   $('#quickModal').classList.add('show');
@@ -161,10 +211,9 @@ function openCart(){ $('#cartDrawer').classList.add('open'); $('#overlay').class
 function closeCart(){ $('#cartDrawer').classList.remove('open'); $('#overlay').classList.remove('show'); }
 
 window.setFilter = (f)=>{
-  filter=f;
-  document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active',c.dataset.f===f));
-  renderProducts();
-  document.querySelector('#best').scrollIntoView({behavior:'smooth'});
+  filter=String(f);
+  renderFilters(); renderProducts();
+  const b=document.querySelector('#best'); if(b) b.scrollIntoView({behavior:'smooth'});
 };
 
 function setLang(l){
@@ -191,7 +240,77 @@ function setLang(l){
       if(s.contact.tiktok&&$('#ttBtn')) $('#ttBtn').href=s.contact.tiktok;
     }
   }catch(e){}
-  renderCollections(); renderProducts(); renderCart();
+  renderFilters(); renderCollections(); renderProducts(); renderCart(); applyTheme();
+}
+
+// ---- Theme / header / footer / SEO (dashboard-controlled) ----
+const DEFAULT_NAV=[
+ {en:'Home',ar:'الرئيسية',href:'#home'},
+ {en:'Collections',ar:'المجموعات',href:'#collections'},
+ {en:'Best Selling',ar:'الأكثر مبيعاً',href:'#best'},
+ {en:'About',ar:'عن البراند',href:'#about'},
+ {en:'Contact',ar:'تواصل معنا',href:'#contact'}
+];
+function absUrl(rel){ try{ const u=new URL(rel,document.baseURI); return u.href; }catch(e){ return rel; } }
+function applyTheme(){
+  let s={}; try{ s=getStore(); }catch(e){}
+  const th=s.theme||{};
+  // colors
+  try{
+    const c=th.colors||{}, root=document.documentElement.style;
+    if(c.bg) root.setProperty('--bg',c.bg);
+    if(c.ink) root.setProperty('--ink',c.ink);
+    if(c.acc) root.setProperty('--acc',c.acc);
+  }catch(e){}
+  // headings
+  const hd=th.headings||{};
+  const ct=$('#colTitle'); if(ct&&(hd['col_'+LANG]||hd.col_ar||hd.col_en)) ct.textContent=hd['col_'+LANG]||(LANG==='ar'?(hd.col_ar||hd.col_en):(hd.col_en||hd.col_ar));
+  const bt=$('#bestTitle'); if(bt&&(hd['best_'+LANG]||hd.best_ar||hd.best_en)) bt.textContent=hd['best_'+LANG]||(LANG==='ar'?(hd.best_ar||hd.best_en):(hd.best_en||hd.best_ar));
+  // hero image
+  const hb=document.querySelector('.hero-bg');
+  if(hb&&(th.hero_img||(th.hero&&th.hero.img))) hb.style.backgroundImage=`linear-gradient(rgba(12,12,14,.68),rgba(12,12,14,.42) 55%,rgba(12,12,14,.72)),url('${th.hero_img||th.hero.img}')`;
+  // announce + hero texts (theme wins, legacy keys fallback)
+  const an=th.announce||s.announce;
+  if(an&&an[LANG]){const a=$('#announce'); if(a)a.textContent=an[LANG];}
+  const hr=th.hero||s.hero||{};
+  if(hr['title_'+LANG]){const e=$('#heroTitle'); if(e)e.textContent=hr['title_'+LANG];}
+  if(hr['sub_'+LANG]){const e=$('#heroSub'); if(e)e.textContent=hr['sub_'+LANG];}
+  // show/hide blocks
+  const sh=th.show||{};
+  [['#collections','collections'],['#about','about'],['#contact','contact']].forEach(([sel,k])=>{
+    const sec=document.querySelector(sel); if(sec) sec.style.display=(sh[k]===false)?'none':'';
+  });
+  // nav
+  const links=(s.header&&Array.isArray(s.header.links)&&s.header.links.length?s.header.links:DEFAULT_NAV);
+  const nav=$('#nav');
+  if(nav) nav.innerHTML=links.map(l=>`<a href="${(l.href||'#').replace(/"/g,'')}">${LANG==='ar'?(l.ar||l.en):(l.en||l.ar)}</a>`).join('');
+  // footer
+  const ft=s.footer||{};
+  const fa=$('#footAbout'); if(fa&&(ft['about_'+LANG]||ft.about_ar||ft.about_en)) fa.textContent=ft['about_'+LANG]||(LANG==='ar'?(ft.about_ar||ft.about_en):(ft.about_en||ft.about_ar));
+  const cp=document.querySelector('footer .copy'); if(cp&&ft.note) cp.textContent=ft.note;
+  // site SEO
+  const seo=s.seo||{};
+  if(seo.site_title) document.title=seo.site_title;
+  const md=document.querySelector('meta[name="description"]');
+  if(md&&seo.site_desc) md.setAttribute('content',seo.site_desc);
+  const og=document.querySelector('meta[property="og:title"]'); if(og&&seo.site_title) og.setAttribute('content',seo.site_title);
+  const ogd=document.querySelector('meta[property="og:description"]'); if(ogd&&seo.site_desc) ogd.setAttribute('content',seo.site_desc);
+  const ogi=document.querySelector('meta[property="og:image"]'); if(ogi&&seo.og_image) ogi.setAttribute('content',absUrl(seo.og_image));
+  injectItemList();
+}
+function injectItemList(){
+  try{
+    const old=document.getElementById('ld-items'); if(old) old.remove();
+    if(!PRODUCTS.length) return;
+    const data={ '@context':'https://schema.org', '@type':'ItemList',
+      itemListElement: PRODUCTS.map((p,i)=>({ '@type':'ListItem', position:i+1,
+        item:{ '@type':'Product', name:p.seo_title||p.en, image:p.img?absUrl(p.img):undefined,
+          description:p.seo_desc||p.desc_en||p.en,
+          brand:{'@type':'Brand',name:'VARNOTO'},
+          offers:{'@type':'Offer',priceCurrency:'EGP',price:p.price,availability:p.stock?'https://schema.org/InStock':'https://schema.org/OutOfStock'} } }))};
+    const sc=document.createElement('script'); sc.type='application/ld+json'; sc.id='ld-items';
+    sc.textContent=JSON.stringify(data); document.head.appendChild(sc);
+  }catch(e){}
 }
 
 // events
@@ -204,11 +323,10 @@ $('#closeModal').onclick = closeModal;
 $('#burger').onclick = ()=> $('#nav').classList.toggle('open');
 $('#searchBtn').onclick = ()=> $('#searchBar').classList.toggle('open');
 $('#searchInput').oninput = (e)=>{ query=e.target.value; renderProducts(); };
-document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{filter=c.dataset.f;document.querySelectorAll('.chip').forEach(x=>x.classList.toggle('active',x===c));renderProducts();});
 $('#checkoutBtn').onclick = async ()=>{
   if(!cart.length) return alert(t('Cart is empty','السلة فاضية'));
-  const total = cart.reduce((a,r)=>a+PRODUCTS.find(x=>x.id===r.id).price*r.q,0);
-  const items = cart.map(r=>{const p=PRODUCTS.find(x=>x.id===r.id);return {id:p.id,name:p.en,q:r.q,price:p.price};});
+  const total = cart.reduce((a,r)=>{const p=findP(r.id);return a+(p?p.price*r.q:0);},0);
+  const items = cart.map(r=>{const p=findP(r.id);return {id:String(r.id),name:p?p.en:'',q:r.q,price:p?p.price:0};});
   const cname=($('#custName')&&$('#custName').value||'').trim();
   const cphone=($('#custPhone')&&$('#custPhone').value||'').trim();
   let orderId=null;

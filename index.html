@@ -5,6 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VARNOTO | ملابس مصرية عصرية</title>
 <meta name="description" content="VARNOTO — براند ملابس مصري: تيشيرتات، قمصان لينن، جينز، سويت بانتس. خامات تقيلة وشحن سريع.">
+<link rel="canonical" href="https://mmetwily1-sudo.github.io/varnoto/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="VARNOTO">
+<meta property="og:title" content="VARNOTO | ملابس مصرية عصرية">
+<meta property="og:description" content="تيشيرتات، قمصان لينن، جينز وايد ليج وسويت بانتس. قصّات نضيفة وأسعار واضحة بالجنيه.">
+<meta property="og:image" content="https://mmetwily1-sudo.github.io/varnoto/assets/hero.jpg">
+<meta property="og:url" content="https://mmetwily1-sudo.github.io/varnoto/">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"ClothingStore","name":"VARNOTO","slogan":"Built for the Bold","address":{"@type":"PostalAddress","addressLocality":"Cairo","addressCountry":"EG"},"currenciesAccepted":"EGP","paymentAccepted":"Cash on Delivery"}</script>
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 <link rel="stylesheet" href="style.css?v=2">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -59,7 +68,7 @@
 <section class="section" id="collections">
   <div class="container">
     <div class="sec-head">
-      <h2 data-en="Browse the Collection" data-ar="تصفّح المجموعة">تصفّح المجموعة</h2>
+      <h2 id="colTitle" data-en="Browse the Collection" data-ar="تصفّح المجموعة">تصفّح المجموعة</h2>
       <a href="#best" class="link" data-en="Shop all →" data-ar="تسوّق الكل ←">تسوّق الكل ←</a>
     </div>
     <div class="grid collections" id="collectionsGrid"></div>
@@ -70,14 +79,8 @@
 <section class="section alt" id="best">
   <div class="container">
     <div class="sec-head">
-      <h2 data-en="Best Selling" data-ar="الأكثر مبيعاً">الأكثر مبيعاً</h2>
-      <div class="filters" id="filters">
-        <button class="chip active" data-f="all" data-en="All" data-ar="الكل">الكل</button>
-        <button class="chip" data-f="tshirt" data-en="T-shirts" data-ar="تيشيرتات">تيشيرتات</button>
-        <button class="chip" data-f="linen" data-en="Linen" data-ar="لينن">لينن</button>
-        <button class="chip" data-f="jeans" data-en="Jeans" data-ar="جينز">جينز</button>
-        <button class="chip" data-f="sweat" data-en="Sweatpants" data-ar="سويت بانتس">سويت بانتس</button>
-      </div>
+      <h2 id="bestTitle" data-en="Best Selling" data-ar="الأكثر مبيعاً">الأكثر مبيعاً</h2>
+      <div class="filters" id="filters"></div>
     </div>
     <div class="grid products" id="productsGrid"></div>
   </div>
@@ -123,7 +126,7 @@
 
 <footer class="footer">
   <div class="container foot-grid">
-    <div><img src="assets/logo-light.svg?v=2" alt="VARNOTO" style="height:30px"><p data-en="Egyptian essentials brand. Cairo, Egypt." data-ar="براند مصري للأساسيات. القاهرة، مصر.">براند مصري للأساسيات. القاهرة، مصر.</p></div>
+    <div><img src="assets/logo-light.svg?v=2" alt="VARNOTO" style="height:30px"><p id="footAbout" data-en="Egyptian essentials brand. Cairo, Egypt." data-ar="براند مصري للأساسيات. القاهرة، مصر.">براند مصري للأساسيات. القاهرة، مصر.</p></div>
     <div><b data-en="Links" data-ar="روابط">روابط</b><br><a href="#home">Home / الرئيسية</a><br><a href="#best">Products / المنتجات</a><br><a href="#contact">Contact / تواصل</a><br><a href="faq.html">FAQ / الأسئلة الشائعة</a><br><a href="admin.html" style="opacity:.55;font-size:13px">Admin / الإدارة</a></div>
     <div><b data-en="Policies" data-ar="السياسات">السياسات</b><br><a href="terms.html">Terms / الشروط والأحكام</a><br><a href="privacy.html">Privacy / الخصوصية</a><br><a href="shipping.html">Shipping & Exchange / الشحن والاستبدال</a><br><span data-en="14-day exchange • Cash on delivery" data-ar="استبدال 14 يوم • دفع عند الاستلام">استبدال 14 يوم • دفع عند الاستلام</span></div>
   </div>
@@ -156,6 +159,7 @@
       <h3 id="mName"></h3>
       <p id="mPrice"></p>
       <p class="tiny" id="mDesc"></p>
+      <p class="tiny" id="mMeta" style="color:var(--acc);font-weight:700"></p>
       <div class="sizes" id="mSizes"><span>S</span><span>M</span><span>L</span><span>XL</span><span>XXL</span></div>
       <button class="btn primary full" id="mAdd" data-en="Add to cart" data-ar="ضيف للسلة">ضيف للسلة</button>
     </div>

@@ -30,5 +30,7 @@
 let L='ar';const $=s=>document.querySelector(s);
 $('#langBtn').onclick=()=>{L=L==='ar'?'en':'ar';document.documentElement.lang=L;document.documentElement.dir=L==='ar'?'rtl':'ltr';$('#langBtn').textContent=L==='ar'?'EN':'عربي';$('#announce').textContent=L==='ar'?'شحن مجاني للطلبات فوق 1999 جنيه 🚚':'Free shipping on orders over 1999 EGP 🚚';document.querySelectorAll('[data-en]').forEach(el=>{el.textContent=L==='ar'?el.dataset.ar:el.dataset.en;});document.title=L==='ar'?'الأسئلة الشائعة | VARNOTO':'FAQ | VARNOTO';};
 </script>
+<script>window.PAGE_SLUG='faq';</script>
+<script src="pages.js?v=1"></script>
 </body>
 </html>
