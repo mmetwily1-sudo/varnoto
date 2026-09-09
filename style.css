@@ -95,6 +95,11 @@ body{font-family:'Cairo','Inter',system-ui,sans-serif;background:var(--bg);color
 .cart-foot{padding:16px 18px;border-top:1px solid var(--line)}
 .cust{display:grid;gap:8px;margin-bottom:12px}
 .cust input{padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:14px;width:100%}
+.coupon{display:flex;gap:8px;margin-bottom:4px}
+.coupon input{flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:14px;min-width:0}
+.coupon button{border-radius:10px;border:1px solid #141414;background:#fff;padding:10px 16px;font-weight:800;cursor:pointer;font-family:inherit}
+.sortrow{display:flex;gap:14px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.sortrow select{padding:9px 12px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-weight:700;background:#fff}
 .total{display:flex;justify-content:space-between;font-size:17px}
 .modal{position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.5);z-index:80;padding:16px}
 .modal.show{display:grid}

@@ -63,7 +63,7 @@ async function boot(){
  P=list.find(p=>String(p.id)===String(id))||list[0];
  render(store,list);
 }
-function render(store,list){
+async function render(store,list){
  const name=t(P.en,P.ar), desc=t(P.desc_ar&&P.desc_ar?P.desc_ar:P.desc_en&&P.desc_en?P.desc_en:'',P.desc_en&&P.desc_en?P.desc_en:P.desc_ar&&P.desc_ar?P.desc_ar:'');
  const seoT=P.seo_title||name+' | VARNOTO', seoD=P.seo_desc||desc||name;
  document.title=seoT;$('#seoDesc').setAttribute('content',seoD);
@@ -99,6 +99,38 @@ function render(store,list){
  };
  const rel=list.filter(x=>String(x.id)!==String(P.id)&&String(x.cat)===String(P.cat)).slice(0,4);
  if(rel.length){$('#relSec').style.display='';$('#relGrid').innerHTML=rel.map(x=>`<div class="card"><div class="thumb"><a href="product.html?id=${x.id}">${x.img?`<img src="${x.img}" alt="" loading="lazy">`:''}</a></div><div class="p-body"><b><a href="product.html?id=${x.id}" style="color:inherit;text-decoration:none">${t(x.en,x.ar)}</a></b><div class="price">${x.price} EGP</div></div></div>`).join('');}
+ // reviews
+ let revs=[];
+ try{
+  const rr=await fetch(SUPA_URL+'/rest/v1/reviews?product_id=eq.'+P.id+'&approved=eq.true&select=name,rating,comment,created_at&order=created_at.desc',{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY}});
+  revs=await rr.json();
+ }catch(e){revs=[];}
+ const avg=revs.length?(revs.reduce((a,r)=>a+Number(r.rating||0),0)/revs.length):0;
+ const stars=n=>'★★★★★'.slice(0,Math.round(n))+'☆☆☆☆☆'.slice(0,5-Math.round(n));
+ if(avg>0){
+  const ld2={'@context':'https://schema.org','@type':'Product',name:P.seo_title||P.en,aggregateRating:{'@type':'AggregateRating',ratingValue:avg.toFixed(1),reviewCount:revs.length}};
+  const s2=document.createElement('script');s2.type='application/ld+json';s2.textContent=JSON.stringify(ld2);document.head.appendChild(s2);
+ }
+ const sec=document.createElement('section');sec.className='section';sec.id='revSec';
+ sec.innerHTML=`<div class="container"><h2>${t('آراء العملاء','Customer reviews')} ${avg>0?`<span style="color:var(--acc)">${stars(avg)} ${avg.toFixed(1)} (${revs.length})</span>`:''}</h2>
+ <div id="revList" style="display:grid;gap:10px;margin:14px 0">${revs.length?revs.map(r=>`<div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px"><b>${r.name||t('عميل','Customer')}</b> <span style="color:var(--acc)">${stars(Number(r.rating))}</span><p class="tiny" style="margin-top:6px">${r.comment||''}</p></div>`).join(''):`<p class="tiny">${t('كن أول من يقيّم هذا المنتج','Be the first to review this product')}</p>`}</div>
+ <h3>${t('قيّم المنتج','Write a review')}</h3>
+ <div class="row2" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+ <input id="rvName" placeholder="${t('اسمك','Your name')}" style="padding:11px;border:1px solid var(--line);border-radius:10px;font-family:inherit">
+ <select id="rvRate" style="padding:11px;border:1px solid var(--line);border-radius:10px;font-family:inherit"><option value="5">★★★★★</option><option value="4">★★★★</option><option value="3">★★★</option><option value="2">★★</option><option value="1">★</option></select></div>
+ <textarea id="rvCmt" placeholder="${t('رأيك في المنتج...','Your review...')}" style="width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;font-family:inherit;margin-top:10px;min-height:80px"></textarea>
+ <button class="btn primary" id="rvSend" style="background:#141414;border-color:#141414;margin-top:10px">${t('إرسال التقييم','Submit review')}</button>
+ <p class="tiny" id="rvMsg"></p></div>`;
+ document.querySelector('footer').before(sec);
+ $('#rvSend').onclick=async()=>{
+  const nm=$('#rvName').value.trim(),cm=$('#rvCmt').value.trim(),rt=Number($('#rvRate').value);
+  if(!cm){$('#rvMsg').textContent=t('اكتب رأيك الأول','Write your review first');return;}
+  try{
+   const r=await fetch(SUPA_URL+'/rest/v1/reviews',{method:'POST',headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({product_id:String(P.id),name:nm||null,rating:rt,comment:cm,approved:false})});
+   $('#rvMsg').textContent=r.ok?t('✅ شكراً! تقييمك هيظهر بعد المراجعة','✅ Thanks! Your review will appear after moderation'):t('تعذر الإرسال','Could not submit');
+   if(r.ok){$('#rvCmt').value='';}
+  }catch(e){$('#rvMsg').textContent=t('تعذر الإرسال','Could not submit');}
+ };
 }
 $('#langBtn').onclick=()=>{L=L==='ar'?'en':'ar';document.documentElement.lang=L;document.documentElement.dir=L==='ar'?'rtl':'ltr';$('#langBtn').textContent=L==='ar'?'EN':'عربي';boot();};
 boot();

@@ -73,7 +73,7 @@ function applyStoreProducts(s){
 }
 
 let cart = JSON.parse(localStorage.getItem('varnoto_cart') || '[]');
-let filter = 'all', query = '';
+let filter = 'all', query = '', SORT='new', SALEONLY=false, COUPON=null;
 
 function t(en, ar){ return LANG === 'ar' ? ar : en; }
 
@@ -104,10 +104,14 @@ function renderCollections(){
 
 function renderProducts(){
   const box=$('#productsGrid'); if(!box) return;
-  const list = PRODUCTS.filter(p =>
+  let list = PRODUCTS.filter(p =>
     (filter==='all' || String(p.cat)===String(filter)) &&
+    (!SALEONLY || p.old) &&
     (!query || (p.en+p.ar).toLowerCase().includes(query.toLowerCase()))
   );
+  if(SORT==='price-asc') list=list.slice().sort((a,b)=>a.price-b.price);
+  else if(SORT==='price-desc') list=list.slice().sort((a,b)=>b.price-a.price);
+  else if(SORT==='new') list=list.slice().reverse();
   box.innerHTML = list.length ? list.map(p=>`
     <div class="card">
       <div class="thumb" onclick="quick('${p.id}')">
@@ -145,7 +149,31 @@ function renderCart(){
       <button onclick="rmItem('${p.id}')" style="border:none;background:none;cursor:pointer">🗑</button></div>`;
   }).join('');
   const total = cart.reduce((a,r)=>{const p=findP(r.id);return a+(p?p.price*r.q:0);},0);
-  $('#cartTotal').textContent = total + ' EGP';
+  const sub=$('#cartSub'); if(sub) sub.textContent=total+' EGP';
+  const disc=(COUPON&&COUPON.discount)||0;
+  const dr=$('#discRow'); if(dr) dr.style.display=disc>0?'flex':'none';
+  const cd=$('#cartDisc'); if(cd) cd.textContent='-'+disc+' EGP';
+  $('#cartTotal').textContent = (total-disc) + ' EGP';
+}
+function cartSubtotal(){ return cart.reduce((a,r)=>{const p=findP(r.id);return a+(p?p.price*r.q:0);},0); }
+async function applyCoupon(){
+  const inp=$('#couponIn'), msg=$('#couponMsg');
+  const code=(inp&&inp.value||'').trim();
+  if(!code){ COUPON=null; renderCart(); if(msg)msg.textContent=''; return; }
+  if(msg) msg.textContent=t('جاري التحقق...','Checking...');
+  COUPON=null;
+  if(!supaOn()){ if(msg)msg.textContent=t('الكوبونات غير مفعلة','Coupons unavailable'); renderCart(); return; }
+  try{
+    const r=await fetch(SUPABASE_URL+'/rest/v1/rpc/validate_coupon',{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_code:code,p_total:cartSubtotal()})});
+    const j=await r.json();
+    if(j&&j.ok){ COUPON={code,discount:j.discount};
+      if(msg){msg.style.color='#1c7a3d';msg.textContent=t('✅ خصم '+j.discount+' جنيه اتطبق','✅ '+j.discount+' EGP off applied');}
+    }else{
+      const why={not_found:t('الكود مش موجود','Code not found'),inactive:t('الكود موقوف','Code inactive'),expired:t('الكود انتهت صلاحيته','Code expired'),min_total:t('الطلب أقل من الحد الأدنى','Below minimum order'),maxed:t('الكود خلص','Code fully used')};
+      if(msg){msg.style.color='#b3261e';msg.textContent='❌ '+(why[j&&j.reason]||t('كود غير صالح','Invalid code'));}
+    }
+  }catch(e){ if(msg)msg.textContent=t('تعذر التحقق، حاول تاني','Could not verify, try again'); }
+  renderCart();
 }
 function chQty(id,d){ const r=cart.find(x=>String(x.id)===String(id)); if(!r) return; r.q+=d; if(r.q<1) cart=cart.filter(x=>String(x.id)!==String(id)); saveCart(); }
 function rmItem(id){ cart=cart.filter(x=>String(x.id)!==String(id)); saveCart(); }
@@ -333,25 +361,30 @@ $('#closeModal').onclick = closeModal;
 $('#burger').onclick = ()=> $('#nav').classList.toggle('open');
 $('#searchBtn').onclick = ()=> $('#searchBar').classList.toggle('open');
 $('#searchInput').oninput = (e)=>{ query=e.target.value; renderProducts(); };
+if($('#couponBtn')) $('#couponBtn').onclick=applyCoupon;
+if($('#sortSel')) $('#sortSel').onchange=(e)=>{ SORT=e.target.value; renderProducts(); };
+if($('#saleOnly')) $('#saleOnly').onchange=(e)=>{ SALEONLY=e.target.checked; renderProducts(); };
 $('#checkoutBtn').onclick = async ()=>{
   if(!cart.length) return alert(t('Cart is empty','السلة فاضية'));
-  const total = cart.reduce((a,r)=>{const p=findP(r.id);return a+(p?p.price*r.q:0);},0);
+  const total = cartSubtotal();
   const items = cart.map(r=>{const p=findP(r.id);return {id:String(r.id),name:p?p.en:'',q:r.q,price:p?p.price:0};});
   const cname=($('#custName')&&$('#custName').value||'').trim();
   const cphone=($('#custPhone')&&$('#custPhone').value||'').trim();
-  let orderId=null;
+  let orderId=null, finalTotal=total, disc=0;
   if(supaOn()){
     try{
-      const r=await fetch(SUPABASE_URL+'/rest/v1/rpc/place_order',{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_name:cname||null,p_phone:cphone||null,p_items:items,p_total:total})});
-      if(r.ok){const j=await r.json(); orderId=(typeof j==='number')?j:(j&&j[0]);}
+      const r=await fetch(SUPABASE_URL+'/rest/v1/rpc/place_order',{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_name:cname||null,p_phone:cphone||null,p_items:items,p_total:total,p_coupon:(COUPON&&COUPON.code)||null})});
+      if(r.ok){const j=await r.json(); orderId=(j&&(typeof j==='number'?j:j.order_id))||null; disc=(j&&j.discount)||0; finalTotal=(j&&j.total!=null)?j.total:(total-disc);}
     }catch(e){}
   }
-  let txt=(LANG==='ar'?'طلب جديد VARNOTO:':'New VARNOTO order:')+'\n'+items.map(i=>`${i.name} x${i.q}`).join('\n')+`\nTotal: ${total} EGP`;
+  let txt=(LANG==='ar'?'طلب جديد VARNOTO:':'New VARNOTO order:')+'\n'+items.map(i=>`${i.name} x${i.q}`).join('\n')+`\nSubtotal: ${total} EGP`;
+  if(disc>0) txt+=`\nDiscount (${(COUPON&&COUPON.code)||''}): -${disc} EGP`;
+  txt+=`\nTotal: ${finalTotal} EGP`;
   if(orderId) txt+='\nOrder #'+orderId;
   if(cname) txt+='\nName: '+cname;
   if(cphone) txt+='\nPhone: '+cphone;
   window.open((window.VARNOTO_WA||'https://wa.me/201000000000')+'?text='+encodeURIComponent(txt),'_blank');
-  if(orderId){ cart=[]; saveCart(); closeCart(); alert(t('Order #'+orderId+' received! We will call you to confirm.','طلبك #'+orderId+' وصل! هنتصل بيك للتأكيد.')); }
+  if(orderId){ cart=[]; COUPON=null; const ci=$('#couponIn'); if(ci)ci.value=''; saveCart(); closeCart(); alert(t('Order #'+orderId+' received! We will call you to confirm.','طلبك #'+orderId+' وصل! هنتصل بيك للتأكيد.')); }
 };
 $('#newsForm').onsubmit = (e)=>{ e.preventDefault(); $('#newsMsg').textContent = t('Thanks! Check your email for 10% off.','شكراً! تابع إيميلك لخصم 10%.'); e.target.reset(); };
 

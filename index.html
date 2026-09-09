@@ -80,6 +80,14 @@
   <div class="container">
     <div class="sec-head">
       <h2 id="bestTitle" data-en="Best Selling" data-ar="الأكثر مبيعاً">الأكثر مبيعاً</h2>
+      <div class="sortrow">
+        <select id="sortSel">
+          <option value="new" data-en="Newest" data-ar="الأحدث">الأحدث</option>
+          <option value="price-asc" data-en="Price: low to high" data-ar="السعر: من الأقل">السعر: من الأقل</option>
+          <option value="price-desc" data-en="Price: high to low" data-ar="السعر: من الأعلى">السعر: من الأعلى</option>
+        </select>
+        <label class="tiny" style="margin:0"><input type="checkbox" id="saleOnly"> <span data-en="On sale only" data-ar="خصومات فقط">خصومات فقط</span></label>
+      </div>
       <div class="filters" id="filters"></div>
     </div>
     <div class="grid products" id="productsGrid"></div>
@@ -143,6 +151,10 @@
       <input id="custName" type="text" data-en-ph="Your name (optional)" data-ar-ph="اسمك (اختياري)" placeholder="اسمك (اختياري)">
       <input id="custPhone" type="tel" dir="ltr" placeholder="01xxxxxxxxx">
     </div>
+    <div class="coupon"><input id="couponIn" type="text" dir="ltr" placeholder="كود الخصم"><button id="couponBtn" type="button" data-en="Apply" data-ar="تطبيق">تطبيق</button></div>
+    <p class="tiny" id="couponMsg" style="margin-top:0"></p>
+    <div class="total"><span data-en="Subtotal" data-ar="المجموع الفرعي">المجموع الفرعي</span><b id="cartSub">0 EGP</b></div>
+    <div class="total" id="discRow" style="display:none"><span data-en="Discount" data-ar="الخصم">الخصم</span><b id="cartDisc" style="color:#1c7a3d">-0 EGP</b></div>
     <div class="total"><span data-en="Total" data-ar="الإجمالي">الإجمالي</span><b id="cartTotal">0 EGP</b></div>
     <p class="tiny" data-en="Free shipping over 1999 EGP • COD available" data-ar="شحن مجاني فوق 1999 جنيه • دفع عند الاستلام">شحن مجاني فوق 1999 جنيه • دفع عند الاستلام</p>
     <button class="btn primary full" id="checkoutBtn" data-en="Checkout (WhatsApp order)" data-ar="إتمام الطلب (واتساب)">إتمام الطلب (واتساب)</button>

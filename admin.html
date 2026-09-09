@@ -90,6 +90,8 @@ td input[type=text],td input[type=number],td select{width:100%;padding:7px 9px;b
 <button class="tab active" data-t="pHome">🏠 الرئيسية</button>
 <button class="tab" data-t="pOrders">🧾 الطلبات <span class="bdg" id="ordBdg" style="display:none">0</span></button>
 <button class="tab" data-t="pProducts">📦 المنتجات</button>
+<button class="tab" data-t="pCoupons">🎟 الكوبونات</button>
+<button class="tab" data-t="pReviews">⭐ التقييمات <span class="bdg" id="revBdg" style="display:none">0</span></button>
 <button class="tab" data-t="pSections">🗂 الأقسام</button>
 <button class="tab" data-t="pTheme">🎨 الثيم والواجهة</button>
 <button class="tab" data-t="pHF">🧱 الهيدر والفوتر</button>
@@ -128,6 +130,29 @@ td input[type=text],td input[type=number],td select{width:100%;padding:7px 9px;b
 <p class="tiny">الطلبات بتوصل لحظياً + صوت تنبيه. حدّث الحالة لكل طلب.</p>
 <table><thead><tr><th>#</th><th>التاريخ</th><th>العميل</th><th>الأصناف</th><th>الإجمالي</th><th>الحالة</th></tr></thead>
 <tbody id="ordRows"><tr><td colspan="6" class="tiny">جاري التحميل...</td></tr></tbody></table>
+</div>
+
+<div class="panel" id="pCoupons">
+<p class="tiny">كود يشاركه العملاء — يُطبق مرة واحدة لكل طلب، والخصم يُحسب من السيرفر.</p>
+<div class="row3">
+<div class="field"><label>الكود (EN, بدون مسافات)</label><input id="cp_code" type="text" dir="ltr" placeholder="SALE10"></div>
+<div class="field"><label>النوع</label><select id="cp_type"><option value="percent">نسبة %</option><option value="fixed">مبلغ ثابت (جنيه)</option></select></div>
+<div class="field"><label>القيمة</label><input id="cp_val" type="number" min="1" value="10"></div>
+</div>
+<div class="row3">
+<div class="field"><label>أقل طلب (جنيه, 0 = بدون حد)</label><input id="cp_min" type="number" min="0" value="0"></div>
+<div class="field"><label>عدد مرات الاستخدام (فاضي = مفتوح)</label><input id="cp_max" type="number" min="1"></div>
+<div class="field"><label>ينتهي في (فاضي = بدون انتهاء)</label><input id="cp_exp" type="date" dir="ltr"></div>
+</div>
+<div class="btnrow"><button class="save" id="cpAdd">＋ إضافة كوبون</button><span class="okmsg" id="msgCp"></span></div>
+<table style="margin-top:14px"><thead><tr><th>الكود</th><th>الخصم</th><th>الشروط</th><th>الاستخدام</th><th>نشط؟</th><th></th></tr></thead><tbody id="cpRows"></tbody></table>
+</div>
+
+<div class="panel" id="pReviews">
+<h3>⏳ بانتظار الاعتماد</h3>
+<table><thead><tr><th>المنتج</th><th>الاسم</th><th>★</th><th>التعليق</th><th></th></tr></thead><tbody id="revPend"></tbody></table>
+<h3 style="margin-top:18px">✅ معتمدة</h3>
+<table><thead><tr><th>المنتج</th><th>الاسم</th><th>★</th><th>التعليق</th><th></th></tr></thead><tbody id="revOk"></tbody></table>
 </div>
 
 <div class="panel" id="pProducts">
@@ -375,7 +400,7 @@ $('#chPwBtn').onclick=async()=>{
 };
 
 // tabs
-document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===b.dataset.t));if(b.dataset.t==='pLog')loadLog();if(b.dataset.t==='pOrders')loadOrders();});
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===b.dataset.t));if(b.dataset.t==='pLog')loadLog();if(b.dataset.t==='pOrders')loadOrders();if(b.dataset.t==='pCoupons')loadCoupons();if(b.dataset.t==='pReviews')loadReviews();if(b.dataset.t==='pHome')loadHome();});
 
 // products
 function renderRows(){
@@ -652,6 +677,75 @@ async function loadLog(){
    :'<tr><td colspan="4" class="tiny">لا تغييرات مسجلة بعد.</td></tr>';
  }catch(e){$('#logRows').innerHTML='<tr><td colspan="4" class="tiny">تعذر التحميل</td></tr>';}
 }
+
+// coupons
+async function loadCoupons(){
+ if(LOCAL_MODE)return;
+ try{
+  const h=await H();
+  const r=await fetch(SUPA_URL+'/rest/v1/coupons?select=*&order=code',{headers:h});
+  if(!r.ok)return;
+  const rows=await r.json();
+  $('#cpRows').innerHTML=rows.length?rows.map(c=>`<tr><td dir="ltr"><b>${c.code}</b></td>
+   <td>${c.type==='percent'?c.value+'%':c.value+' EGP'}</td>
+   <td class="tiny">أدنى ${c.min_total||0} • ${c.max_uses||'∞'} • ${c.expires_at?String(c.expires_at).slice(0,10):'دائم'}</td>
+   <td><b>${c.used_count||0}</b></td>
+   <td>${c.active?'✅':'❌'}</td>
+   <td style="white-space:nowrap"><button class="ghostb" style="padding:6px 12px" onclick="toggleCoupon('${c.code}',${!c.active})">${c.active?'إيقاف':'تفعيل'}</button>
+   <button class="del" onclick="delCoupon('${c.code}')">🗑</button></td></tr>`).join('')
+   :'<tr><td colspan="6" class="tiny">لا كوبونات — ضيف أول كود خصم.</td></tr>';
+ }catch(e){}
+}
+window.toggleCoupon=async(code,on)=>{
+ try{const h=await H();h['Content-Type']='application/json';h.Prefer='return=minimal';
+  await fetch(SUPA_URL+'/rest/v1/coupons?code=eq.'+encodeURIComponent(code),{method:'PATCH',headers:h,body:JSON.stringify({active:on})});
+  logAction(on?'تفعيل كوبون':'إيقاف كوبون',{code});loadCoupons();}catch(e){alert('تعذر التحديث');}
+};
+window.delCoupon=async code=>{
+ if(!confirm('تحذف كوبون '+code+'؟'))return;
+ try{const h=await H();await fetch(SUPA_URL+'/rest/v1/coupons?code=eq.'+encodeURIComponent(code),{method:'DELETE',headers:h});
+  logAction('حذف كوبون',{code});loadCoupons();}catch(e){alert('تعذر الحذف');}
+};
+$('#cpAdd').onclick=async()=>{
+ const code=$('#cp_code').value.trim().toUpperCase().replace(/\s+/g,'');
+ if(!code){alert('اكتب الكود');return;}
+ try{
+  const h=await H();h['Content-Type']='application/json';h.Prefer='return=minimal';
+  const body={code,type:$('#cp_type').value,value:Number($('#cp_val').value||0),min_total:Number($('#cp_min').value||0),
+   max_uses:$('#cp_max').value==='' ? null:Number($('#cp_max').value),expires_at:$('#cp_exp').value||null,active:true};
+  const r=await fetch(SUPA_URL+'/rest/v1/coupons',{method:'POST',headers:h,body:JSON.stringify(body)});
+  if(!r.ok){$('#msgCp').textContent='الكود موجود قبل كده';return;}
+  $('#cp_code').value='';logAction('إضافة كوبون',{code});loadCoupons();
+  $('#msgCp').textContent='✅ اتضاف';setTimeout(()=>$('#msgCp').textContent='',2500);
+ }catch(e){alert('تعذر الإضافة');}
+};
+
+// reviews moderation
+function pname(id){const p=allProducts().find(x=>String(x.id)===String(id));return p?(p.ar||p.en):id;}
+async function loadReviews(){
+ if(LOCAL_MODE)return;
+ try{
+  const h=await H();
+  const r=await fetch(SUPA_URL+'/rest/v1/reviews?select=*&order=created_at.desc&limit=200',{headers:h});
+  if(!r.ok)return;
+  const rows=await r.json();
+  const pend=rows.filter(x=>!x.approved), okd=rows.filter(x=>x.approved);
+  const b=$('#revBdg');b.style.display=pend.length?'inline-block':'none';b.textContent=pend.length;
+  const row=x=>`<tr><td>${pname(x.product_id)}</td><td>${x.name||'—'}</td><td>${'★'.repeat(Number(x.rating)||0)}</td><td style="font-size:12px">${x.comment||''}</td>`;
+  $('#revPend').innerHTML=pend.length?pend.map(x=>row(x)+`<td style="white-space:nowrap"><button class="ghostb" style="padding:6px 12px" onclick="approveReview(${x.id})">✅ اعتماد</button> <button class="del" onclick="delReview(${x.id})">🗑</button></td></tr>`).join(''):'<tr><td colspan="5" class="tiny">مفيش حاجة مستنية.</td></tr>';
+  $('#revOk').innerHTML=okd.length?okd.map(x=>row(x)+`<td><button class="del" onclick="delReview(${x.id})">🗑</button></td></tr>`).join(''):'<tr><td colspan="5" class="tiny">لا تقييمات معتمدة.</td></tr>';
+ }catch(e){}
+}
+window.approveReview=async id=>{
+ try{const h=await H();h['Content-Type']='application/json';h.Prefer='return=minimal';
+  await fetch(SUPA_URL+'/rest/v1/reviews?id=eq.'+id,{method:'PATCH',headers:h,body:JSON.stringify({approved:true})});
+  logAction('اعتماد تقييم',{id});loadReviews();}catch(e){alert('تعذر الاعتماد');}
+};
+window.delReview=async id=>{
+ if(!confirm('تحذف التقييم؟'))return;
+ try{const h=await H();await fetch(SUPA_URL+'/rest/v1/reviews?id=eq.'+id,{method:'DELETE',headers:h});
+  logAction('حذف تقييم',{id});loadReviews();}catch(e){alert('تعذر الحذف');}
+};
 
 // backup
 $('#expBtn').onclick=()=>{const blob=new Blob([localStorage.getItem(KEY)||'{}'],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='varnoto-store-backup.json';a.click();};

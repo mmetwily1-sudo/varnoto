@@ -69,6 +69,112 @@ create policy "varnoto log admin" on change_log for all
 alter publication supabase_realtime add table orders;
 alter publication supabase_realtime add table store_config;
 
+-- 5) Coupons (admin-managed, validated server-side via RPC)
+create table if not exists coupons (
+  code text primary key,
+  type text default 'percent',
+  value int not null,
+  min_total int default 0,
+  max_uses int,
+  used_count int default 0,
+  active boolean default true,
+  expires_at timestamptz
+);
+alter table coupons enable row level security;
+drop policy if exists "varnoto coupons admin" on coupons;
+create policy "varnoto coupons admin" on coupons for all
+  using ((auth.jwt()->'user_metadata'->>'role')='admin')
+  with check ((auth.jwt()->'user_metadata'->>'role')='admin');
+
+alter table orders add column if not exists coupon_code text;
+alter table orders add column if not exists discount int default 0;
+
+create or replace function validate_coupon(p_code text, p_total int)
+returns jsonb language plpgsql security definer set search_path = public as $F$
+declare c coupons%rowtype; d int;
+begin
+ select * into c from coupons where lower(code)=lower(trim(p_code));
+ if not found then return jsonb_build_object('ok',false,'reason','not_found'); end if;
+ if not c.active then return jsonb_build_object('ok',false,'reason','inactive'); end if;
+ if c.expires_at is not null and c.expires_at < now() then return jsonb_build_object('ok',false,'reason','expired'); end if;
+ if p_total < coalesce(c.min_total,0) then return jsonb_build_object('ok',false,'reason','min_total','min',c.min_total); end if;
+ if c.max_uses is not null and coalesce(c.used_count,0) >= c.max_uses then return jsonb_build_object('ok',false,'reason','maxed'); end if;
+ if c.type='percent' then d := floor(p_total * c.value / 100); else d := least(c.value, p_total); end if;
+ return jsonb_build_object('ok',true,'type',c.type,'value',c.value,'discount',d);
+end; $F$;
+grant execute on function validate_coupon(text,int) to anon, authenticated;
+
+-- 6) Reviews (public read approved only, public insert pending, admin full)
+create table if not exists reviews (
+  id bigint generated always as identity primary key,
+  created_at timestamptz default now(),
+  product_id text not null,
+  name text,
+  rating int not null,
+  comment text,
+  approved boolean default false
+);
+alter table reviews enable row level security;
+drop policy if exists "varnoto reviews read" on reviews;
+create policy "varnoto reviews read" on reviews for select using (approved = true);
+drop policy if exists "varnoto reviews insert" on reviews;
+create policy "varnoto reviews insert" on reviews for insert with check (approved = false and rating between 1 and 5);
+drop policy if exists "varnoto reviews admin" on reviews;
+create policy "varnoto reviews admin" on reviews for all
+  using ((auth.jwt()->'user_metadata'->>'role')='admin')
+  with check ((auth.jwt()->'user_metadata'->>'role')='admin');
+
+-- 7) RPC: secure order placement (validates coupon server-side, counts usage)
+create or replace function place_order(p_name text, p_phone text, p_items jsonb, p_total int, p_coupon text default null)
+returns jsonb language plpgsql security definer set search_path = public as $F$
+declare nid bigint; d int := 0; c coupons%rowtype;
+begin
+ if p_total is null or p_total < 1 then raise exception 'bad total'; end if;
+ if p_coupon is not null and trim(p_coupon) <> '' then
+  select * into c from coupons where lower(code)=lower(trim(p_coupon));
+  if found and c.active and (c.expires_at is null or c.expires_at > now()) and p_total >= coalesce(c.min_total,0) and (c.max_uses is null or coalesce(c.used_count,0) < c.max_uses) then
+   if c.type='percent' then d := floor(p_total * c.value / 100); else d := least(c.value, p_total); end if;
+   update coupons set used_count = coalesce(used_count,0)+1 where code = c.code;
+  end if;
+ end if;
+ insert into orders(customer_name, customer_phone, items, total, coupon_code, discount)
+ values (nullif(p_name,''), nullif(p_phone,''), coalesce(p_items,'[]'), p_total - d, nullif(trim(p_coupon),''), d)
+ returning id into nid;
+ return jsonb_build_object('order_id',nid,'discount',d,'total',p_total-d);
+end; $F$;
+grant execute on function place_order(text,text,jsonb,int,text) to anon, authenticated;
+
+-- 8) RPC: dashboard aggregates (managers only)
+create or replace function dashboard_stats(ndays int default 14)
+returns jsonb language plpgsql security definer set search_path = public as $F$
+declare res jsonb;
+begin
+select jsonb_build_object(
+ 'visits_total', (select count(*) from events),
+ 'revenue_total', coalesce((select sum(total) from orders),0),
+ 'orders_count', (select count(*) from orders),
+ 'buyers_count', (select count(distinct coalesce(nullif(customer_phone,''), nullif(customer_name,''), id::text)) from orders),
+ 'avg_basket', coalesce((select avg(total)::int from orders),0),
+ 'daily', (select coalesce(jsonb_agg(t order by t.d), '[]') from (
+   select to_char(d,'YYYY-MM-DD') d,
+     (select count(*) from events where created_at::date=d) visits,
+     (select count(*) from orders where created_at::date=d) orders,
+     (select coalesce(sum(total),0) from orders where created_at::date=d) revenue
+   from generate_series(current_date - (ndays-1), current_date, interval '1 day') d) t),
+ 'top_products', (select coalesce(jsonb_agg(t order by t.revenue desc), '[]') from (
+   select it->>'name' nm, sum((it->>'q')::int) qty, sum((it->>'q')::int*(it->>'price')::int) revenue
+   from orders, jsonb_array_elements(items) it group by 1 order by 3 desc limit 8) t),
+ 'buyers', (select coalesce(jsonb_agg(t order by t.spent desc), '[]') from (
+   select coalesce(nullif(customer_name,''), '--') nm, coalesce(nullif(customer_phone,''), '--') ph,
+     count(*) ords, sum(total) spent, max(created_at) last_at
+   from orders group by 1,2 order by 4 desc limit 10) t)
+) into res;
+return res;
+end; $F$;
+grant execute on function dashboard_stats(int) to authenticated;
+revoke execute on function dashboard_stats(int) from public;
+revoke execute on function dashboard_stats(int) from anon;
+
 -- 5) Visit tracking (public insert-only, admin read)
 create table if not exists events (
   id bigint generated always as identity primary key,
