@@ -115,7 +115,9 @@ td input[type=text],td input[type=number],td select{width:100%;padding:7px 9px;b
 <div class="stat"><b id="hOrders">–</b><span>🧾 الطلبات</span></div>
 <div class="stat"><b id="hBuyers">–</b><span>🧑 المشترين</span></div>
 <div class="stat"><b id="hAvg">–</b><span>🧺 متوسط السلة</span></div>
+<div class="stat"><b id="hProfit">–</b><span>📊 صافي الربح <span class="tiny" id="hMargin"></span></span></div>
 </div>
+<div id="stockAlerts" style="margin-bottom:14px"></div>
 <h3>📈 الزيارات والمبيعات</h3>
 <div style="position:relative;height:300px"><canvas id="salesChart"></canvas></div>
 <div class="row2" style="margin-top:18px">
@@ -276,6 +278,7 @@ td input[type=text],td input[type=number],td select{width:100%;padding:7px 9px;b
 </div>
 <div class="row3">
 <div class="field"><label>الكمية بالمخزون</label><input id="e_qty" type="number" min="0"></div>
+<div class="field"><label>التكلفة (جنيه/قطعة — للأرباح)</label><input id="e_cost" type="number" min="0"></div>
 <div class="field"><label>الوزن (نص حر)</label><input id="e_weight" type="text"></div>
 <div class="field"><label>متاح؟</label><select id="e_stock"><option value="1">متاح ✅</option><option value="0">نافد ❌</option></select></div>
 </div>
@@ -419,12 +422,12 @@ function renderRows(){
  $('#stAvg').textContent=rows.length?Math.round(rows.reduce((a,p)=>a+Number(p.price||0),0)/rows.length):0;
 }
 window.openEditor=function(id){
- const p=allProducts().find(x=>String(x.id)===String(id))||{id:'c'+Date.now().toString(36),cat:'tshirt',en:'',ar:'',price:100,old:'',stock:true,qty:10,weight:'',desc_en:'',desc_ar:'',seo_title:'',seo_desc:'',imgs:[]};
+ const p=allProducts().find(x=>String(x.id)===String(id))||{id:'c'+Date.now().toString(36),cat:'tshirt',en:'',ar:'',price:100,old:'',stock:true,qty:10,cost:0,weight:'',desc_en:'',desc_ar:'',seo_title:'',seo_desc:'',imgs:[]};
  EDIT_ID=String(p.id);
  $('#edTitle').textContent=(allProducts().some(x=>String(x.id)===String(id))?'تحرير: ':'منتج جديد: ')+(p.ar||p.en||'');
  $('#e_en').value=p.en||'';$('#e_ar').value=p.ar||'';$('#e_cat').value=p.cat||'tshirt';
  $('#e_price').value=p.price!=null?p.price:'';$('#e_old').value=(p.old==null||p.old==='')?'':p.old;
- $('#e_qty').value=p.qty!=null?p.qty:'';$('#e_weight').value=p.weight||'';$('#e_stock').value=p.stock?'1':'0';
+ $('#e_qty').value=p.qty!=null?p.qty:'';$('#e_cost').value=p.cost!=null?p.cost:'';$('#e_weight').value=p.weight||'';$('#e_stock').value=p.stock?'1':'0';
  $('#e_den').value=p.desc_en||'';$('#e_dar').value=p.desc_ar||'';
  $('#e_imgs').value=((p.imgs&&p.imgs.length?p.imgs:(p.img?[p.img]:[]))||[]).join('\n');
  $('#e_st').value=p.seo_title||'';$('#e_sd').value=p.seo_desc||'';
@@ -434,7 +437,7 @@ window.delProduct=function(id){
  const p=allProducts().find(x=>String(x.id)===String(id));
  if(!confirm('تحذف "'+(p?(p.ar||p.en):id)+'" نهائياً؟'))return;
  const s=load();
- const cur=Array.isArray(s.products)?s.products.slice():DEFAULTS.map(d=>({id:d.id,cat:d.cat,en:d.en,ar:d.ar,price:d.price,old:d.old,stock:d.stock,qty:d.qty,weight:d.weight,desc_en:d.desc_en,desc_ar:d.desc_ar,seo_title:d.seo_title,seo_desc:d.seo_desc,imgs:d.imgs}));
+ const cur=Array.isArray(s.products)?s.products.slice():DEFAULTS.map(d=>({id:d.id,cat:d.cat,en:d.en,ar:d.ar,price:d.price,old:d.old,stock:d.stock,qty:d.qty,cost:0,weight:d.weight,desc_en:d.desc_en,desc_ar:d.desc_ar,seo_title:d.seo_title,seo_desc:d.seo_desc,imgs:d.imgs}));
  s.products=cur.filter(o=>String(o.id)!==String(id));
  save(s);renderRows();logAction('حذف منتج',{id:String(id)});
 };
@@ -449,13 +452,13 @@ $('#edSave').onclick=()=>{
  const o={id:isNaN(Number(EDIT_ID))?EDIT_ID:Number($('#e_price').value===''?'':EDIT_ID)||EDIT_ID,
   cat:$('#e_cat').value.trim()||'tshirt',en:$('#e_en').value.trim(),ar:$('#e_ar').value.trim(),
   price:Number($('#e_price').value||0),old:$('#e_old').value===''?'':Number($('#e_old').value),
-  stock:$('#e_stock').value==='1',qty:$('#e_qty').value===''?'':Number($('#e_qty').value),
+  stock:$('#e_stock').value==='1',qty:$('#e_qty').value===''?'':Number($('#e_qty').value),cost:$('#e_cost').value===''?'':Number($('#e_cost').value),
   weight:$('#e_weight').value.trim(),desc_en:$('#e_den').value.trim(),desc_ar:$('#e_dar').value.trim(),
   seo_title:$('#e_st').value.trim(),seo_desc:$('#e_sd').value.trim(),imgs};
  o.img=imgs[0]||'';
  if(!/^\d+$/.test(String(EDIT_ID))) o.id=EDIT_ID;
  const s=load();
- const cur=Array.isArray(s.products)&&s.products.length?s.products.slice():DEFAULTS.map(d=>({id:d.id,cat:d.cat,en:d.en,ar:d.ar,price:d.price,old:d.old,stock:d.stock,qty:d.qty,weight:d.weight,desc_en:d.desc_en,desc_ar:d.desc_ar,seo_title:d.seo_title,seo_desc:d.seo_desc,imgs:d.imgs,img:(d.imgs||[])[0]||''}));
+ const cur=Array.isArray(s.products)&&s.products.length?s.products.slice():DEFAULTS.map(d=>({id:d.id,cat:d.cat,en:d.en,ar:d.ar,price:d.price,old:d.old,stock:d.stock,qty:d.qty,cost:0,weight:d.weight,desc_en:d.desc_en,desc_ar:d.desc_ar,seo_title:d.seo_title,seo_desc:d.seo_desc,imgs:d.imgs,img:(d.imgs||[])[0]||''}));
  const ix=cur.findIndex(x=>String(x.id)===String(o.id));
  if(ix>=0)cur[ix]=o;else cur.push(o);
  s.products=cur;save(s);renderRows();logAction(ix>=0?'تعديل منتج':'إضافة منتج',{id:String(o.id)});
@@ -583,7 +586,8 @@ async function loadHome(){
  $('#homeMsg').textContent='جاري التحميل...';
  try{
   const h=await H();
-  const r=await fetch(SUPA_URL+'/rest/v1/rpc/dashboard_stats',{method:'POST',headers:Object.assign(h,{'Content-Type':'application/json'}),body:JSON.stringify({ndays:HOME_DAYS})});
+  const costs={}; allProducts().forEach(p=>{const c=Number(p.cost||0); if(c>0){costs[String(p.id)]=c; if(p.en)costs[p.en]=c;}});
+  const r=await fetch(SUPA_URL+'/rest/v1/rpc/dashboard_stats',{method:'POST',headers:Object.assign(h,{'Content-Type':'application/json'}),body:JSON.stringify({ndays:HOME_DAYS,costs})});
   if(!r.ok){$('#homeMsg').textContent='سجل دخول المدير لعرض البيانات';return;}
   const d=await r.json();
   $('#homeMsg').textContent='آخر '+HOME_DAYS+' يوم';
@@ -592,6 +596,8 @@ async function loadHome(){
   $('#hOrders').textContent=(d.orders_count||0).toLocaleString('ar-EG');
   $('#hBuyers').textContent=(d.buyers_count||0).toLocaleString('ar-EG');
   $('#hAvg').textContent=(d.avg_basket||0).toLocaleString('ar-EG');
+  $('#hProfit').textContent=(d.profit_total||0).toLocaleString('ar-EG');
+  $('#hMargin').textContent='(هامش '+(d.margin_pct||0)+'%)';
   const days=(d.daily||[]), labels=days.map(x=>x.d.slice(5)), vv=days.map(x=>x.visits), oo=days.map(x=>x.orders), rr=days.map(x=>x.revenue);
   try{
    if(CHART)CHART.destroy();
@@ -604,9 +610,28 @@ async function loadHome(){
      scales:{y:{beginAtZero:true},y1:{beginAtZero:true,position:'right',grid:{drawOnChartArea:false}}}}});
   }catch(e){}
   $('#topRows').innerHTML=(d.top_products||[]).length?(d.top_products||[]).map(p=>`<tr><td>${p.nm||''}</td><td><b>${p.qty}</b></td><td><b>${p.revenue} EGP</b></td></tr>`).join(''):'<tr><td colspan="3" class="tiny">لا مبيعات بعد</td></tr>';
+  renderStockAlerts();
   $('#buyRows').innerHTML=(d.buyers||[]).length?(d.buyers||[]).map(b=>`<tr><td>${b.nm||''}</td><td dir="ltr" style="font-size:12px">${b.ph||''}</td><td>${b.ords}</td><td><b>${b.spent} EGP</b></td></tr>`).join(''):'<tr><td colspan="4" class="tiny">لا مشترين بعد</td></tr>';
  }catch(e){$('#homeMsg').textContent='تعذر التحميل';}
 }
+
+// stock alerts
+function renderStockAlerts(){
+ const low=allProducts().filter(p=>(p.qty||0)<=5);
+ const box=$('#stockAlerts'); if(!box)return;
+ if(!low.length){box.innerHTML='';return;}
+ box.innerHTML=`<div style="background:#fff8e6;border:1px solid #e0a100;border-radius:12px;padding:12px 16px">
+ <b>⚠ مخزون منخفض (${low.length}):</b> `+low.map(p=>`${p.ar||p.en} (<b>${p.qty||0}</b>) <button class="ghostb" style="padding:4px 10px;margin:2px" onclick="restock('${p.id}')">+20</button>`).join(' • ')+'</div>';
+}
+window.restock=function(id){
+ const s=load();
+ const cur=Array.isArray(s.products)&&s.products.length?s.products.slice():DEFAULTS.map(d=>({id:d.id,qty:d.qty}));
+ let f=cur.find(x=>String(x.id)===String(id));
+ if(!f){const p=allProducts().find(x=>String(x.id)===String(id));f={id:typeof p.id==='number'?p.id:String(p.id),qty:p.qty||0};cur.push(f);}
+ f.qty=Number(f.qty||0)+20; f.stock=true;
+ s.products=cur;save(s);logAction('تزويد مخزون',{id:String(id),qty:f.qty});
+ renderRows();renderStockAlerts();loadHome();
+};
 
 // orders
 const ST_AR={new:'جديد',preparing:'يتجهز',shipped:'اتشحن',done:'تم ✅'};
@@ -622,18 +647,36 @@ async function loadOrders(){
  }catch(e){$('#ordRows').innerHTML='<tr><td colspan="6" class="tiny">تعذر التحميل</td></tr>';}
 }
 function renderOrders(rows){
+ rows=rows||[]; ORDERS=rows;
  const news=rows.filter(o=>o.status==='new').length;
  $('#stOrders').textContent=news;
  const b=$('#ordBdg');b.style.display=news?'inline-block':'none';b.textContent=news;
  $('#ordRows').innerHTML=rows.length?rows.map(o=>`<tr>
   <td><b>#${o.id}</b></td><td style="font-size:12px">${fmtDate(o.created_at)}</td>
   <td>${(o.customer_name||'—')}<br><span class="tiny" dir="ltr">${(o.customer_phone||'')}</span></td>
-  <td style="font-size:12px">${itemsTxt(o.items)}</td><td><b>${o.total} EGP</b></td>
+  <td style="font-size:12px">${itemsTxt(o.items)}</td><td><b>${o.total} EGP</b>${o.discount?`<br><span class="tiny" style="color:#1c7a3d">خصم ${o.discount}</span>`:''}</td>
   <td><span class="st-${o.status||'new'}">${ST_AR[o.status]||o.status}</span><br>
-  <select data-st="${o.id}" style="margin-top:6px"><option value="">تغيير ←</option><option value="preparing">يتجهز</option><option value="shipped">اتشحن</option><option value="done">تم ✅</option></select></td></tr>`).join('')
+  <select data-st="${o.id}" style="margin-top:6px"><option value="">تغيير ←</option><option value="preparing">يتجهز</option><option value="shipped">اتشحن</option><option value="done">تم ✅</option></select><br>
+  <button class="ghostb" style="padding:4px 10px;margin-top:6px" onclick="printOrder(${o.id})">🖨 فاتورة</button></td></tr>`).join('')
   :'<tr><td colspan="6" class="tiny">لا طلبات بعد — أول طلب هيظهر هنا لحظياً مع تنبيه صوتي.</td></tr>';
  document.querySelectorAll('[data-st]').forEach(sel=>sel.onchange=()=>{if(sel.value)setStatus(Number(sel.dataset.st),sel.value);});
 }
+let ORDERS=[];
+window.printOrder=function(id){
+ const o=(ORDERS||[]).find(x=>Number(x.id)===Number(id)); if(!o)return;
+ const items=o.items||[]; const sub=items.reduce((a,i)=>a+Number(i.price||0)*Number(i.q||0),0);
+ const w=window.open('','_blank','width=680,height=850');
+ w.document.write('<html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>فاتورة #'+o.id+'</title><style>body{font-family:Arial,Tahoma;padding:28px;color:#111}table{width:100%;border-collapse:collapse;margin:14px 0}td,th{border:1px solid #999;padding:8px;text-align:right;font-size:14px}h1{font-size:24px;margin:0}.hd{display:flex;justify-content:space-between;align-items:center}.tot{font-size:18px;font-weight:bold}button{padding:10px 26px;font-size:15px;cursor:pointer}@media print{button{display:none}}</style></head><body>'
+ +'<div class="hd"><div><h1>VARNOTO</h1><div>القاهرة، مصر — varnoto.com</div></div><div><b>فاتورة طلب #'+o.id+'</b><div>'+fmtDate(o.created_at)+'</div><div>الحالة: '+o.status+'</div></div></div><hr>'
+ +'<p><b>العميل:</b> '+(o.customer_name||'—')+' — <span dir="ltr">'+(o.customer_phone||'')+'</span></p>'
+ +'<table><tr><th>الصنف</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr>'
+ +items.map(i=>'<tr><td>'+i.name+'</td><td>'+i.q+'</td><td>'+i.price+' EGP</td><td>'+(i.q*i.price)+' EGP</td></tr>').join('')
+ +'</table><p>المجموع الفرعي: '+sub+' EGP</p>'
+ +(o.discount?'<p>الخصم'+(o.coupon_code?' ('+o.coupon_code+')':'')+': -'+o.discount+' EGP</p>':'')
+ +'<p class="tot">الإجمالي: '+o.total+' EGP (عند الاستلام)</p>'
+ +'<p><button onclick="window.print()">🖨 طباعة</button></p></body></html>');
+ w.document.close();
+};
 async function setStatus(id,st){
  try{
   const h=await H();h['Content-Type']='application/json';h.Prefer='return=minimal';
@@ -752,7 +795,7 @@ $('#expBtn').onclick=()=>{const blob=new Blob([localStorage.getItem(KEY)||'{}'],
 $('#impFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(r.result);save(o);logAction('استرجاع نسخة',{});location.reload();}catch(err){alert('ملف غير صالح');}};r.readAsText(f);};
 $('#resetBtn').onclick=()=>{if(confirm('متأكد؟ هيرجع كل حاجة للوضع الأصلي.')){localStorage.removeItem(KEY);location.reload();}};
 
-function fillAll(){renderRows();renderSecs();fillTheme();fillHF();fillPg();fillSEO();fillC();}
+function fillAll(){renderRows();renderSecs();renderStockAlerts();fillTheme();fillHF();fillPg();fillSEO();fillC();}
 fillAll();
 </script>
 </body>

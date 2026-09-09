@@ -45,6 +45,7 @@ function applyStoreProducts(s){
       p.old=(o.old===undefined||o.old===''||o.old===null)?null:Number(o.old);
       if(o.stock!==undefined) p.stock=!!o.stock;
       if(o.qty!==undefined&&o.qty!==''&&o.qty!==null) p.qty=Number(o.qty);
+      if(o.cost!==undefined&&o.cost!==''&&o.cost!==null) p.cost=Number(o.cost);
       if(o.weight!==undefined) p.weight=o.weight;
       if(o.desc_en!==undefined) p.desc_en=o.desc_en;
       if(o.desc_ar!==undefined) p.desc_ar=o.desc_ar;

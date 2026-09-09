@@ -144,14 +144,22 @@ begin
 end; $F$;
 grant execute on function place_order(text,text,jsonb,int,text) to anon, authenticated;
 
--- 8) RPC: dashboard aggregates (managers only)
-create or replace function dashboard_stats(ndays int default 14)
+-- 8) RPC: dashboard aggregates (managers only) — costs map {productIdOrName: cost}
+create or replace function dashboard_stats(ndays int default 14, costs jsonb default '{}')
 returns jsonb language plpgsql security definer set search_path = public as $F$
-declare res jsonb;
+declare res jsonb; rev int; cst int; dsc int;
 begin
+select coalesce(sum(total),0) into rev from orders;
+select coalesce(sum((it->>'q')::int * coalesce((costs->>(it->>'id'))::int, (costs->>(it->>'name'))::int, 0)),0) into cst
+  from orders, jsonb_array_elements(items) it;
+select coalesce(sum(coalesce(discount,0)),0) into dsc from orders;
 select jsonb_build_object(
  'visits_total', (select count(*) from events),
- 'revenue_total', coalesce((select sum(total) from orders),0),
+ 'revenue_total', rev,
+ 'cost_total', cst,
+ 'discount_total', dsc,
+ 'profit_total', rev - cst,
+ 'margin_pct', case when rev > 0 then round((rev - cst) * 100.0 / rev) else 0 end,
  'orders_count', (select count(*) from orders),
  'buyers_count', (select count(distinct coalesce(nullif(customer_phone,''), nullif(customer_name,''), id::text)) from orders),
  'avg_basket', coalesce((select avg(total)::int from orders),0),
@@ -162,7 +170,8 @@ select jsonb_build_object(
      (select coalesce(sum(total),0) from orders where created_at::date=d) revenue
    from generate_series(current_date - (ndays-1), current_date, interval '1 day') d) t),
  'top_products', (select coalesce(jsonb_agg(t order by t.revenue desc), '[]') from (
-   select it->>'name' nm, sum((it->>'q')::int) qty, sum((it->>'q')::int*(it->>'price')::int) revenue
+   select it->>'name' nm, sum((it->>'q')::int) qty, sum((it->>'q')::int*(it->>'price')::int) revenue,
+     sum((it->>'q')::int*(it->>'price')::int) - sum((it->>'q')::int * coalesce((costs->>(it->>'id'))::int, (costs->>(it->>'name'))::int, 0)) profit
    from orders, jsonb_array_elements(items) it group by 1 order by 3 desc limit 8) t),
  'buyers', (select coalesce(jsonb_agg(t order by t.spent desc), '[]') from (
    select coalesce(nullif(customer_name,''), '--') nm, coalesce(nullif(customer_phone,''), '--') ph,
@@ -171,9 +180,9 @@ select jsonb_build_object(
 ) into res;
 return res;
 end; $F$;
-grant execute on function dashboard_stats(int) to authenticated;
-revoke execute on function dashboard_stats(int) from public;
-revoke execute on function dashboard_stats(int) from anon;
+grant execute on function dashboard_stats(int, jsonb) to authenticated;
+revoke execute on function dashboard_stats(int, jsonb) from public;
+revoke execute on function dashboard_stats(int, jsonb) from anon;
 
 -- 5) Visit tracking (public insert-only, admin read)
 create table if not exists events (
