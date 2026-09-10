@@ -278,6 +278,22 @@ begin
 end; $F$;
 grant execute on function my_orders(text,int) to anon, authenticated;
 
+-- 11) Product image storage (public read, admin upload)
+insert into storage.buckets (id, name, public) values ('product-images','product-images', true)
+on conflict (id) do update set public = true;
+drop policy if exists "varnoto img public" on storage.objects;
+create policy "varnoto img public" on storage.objects for select using (bucket_id = 'product-images');
+drop policy if exists "varnoto img admin" on storage.objects;
+create policy "varnoto img admin" on storage.objects for insert
+  with check (bucket_id = 'product-images' and (auth.jwt()->'user_metadata'->>'role')='admin');
+drop policy if exists "varnoto img admin mod" on storage.objects;
+create policy "varnoto img admin mod" on storage.objects for update
+  using (bucket_id = 'product-images' and (auth.jwt()->'user_metadata'->>'role')='admin')
+  with check (bucket_id = 'product-images');
+drop policy if exists "varnoto img admin del" on storage.objects;
+create policy "varnoto img admin del" on storage.objects for delete
+  using (bucket_id = 'product-images' and (auth.jwt()->'user_metadata'->>'role')='admin');
+
 -- 10) Pack-4: subscribers, articles, loyalty, funnel events
 create table if not exists subscribers (
   id bigint generated always as identity primary key,

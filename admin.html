@@ -233,7 +233,8 @@ td input[type=text],td input[type=number],td select{width:100%;padding:7px 9px;b
 <div id="artEd" style="display:none;margin-top:16px;border-top:1px solid var(--line);padding-top:16px">
 <div class="row2">
 <div class="field"><label>slug (EN, بدون مسافات)</label><input id="a_slug" type="text" dir="ltr"></div>
-<div class="field"><label>صورة الغلاف (رابط)</label><input id="a_cover" type="text" dir="ltr"></div>
+<div class="field"><label>صورة الغلاف (رابط)</label><input id="a_cover" type="text" dir="ltr">
+<div class="btnrow" style="margin-top:8px"><label class="ghostb" style="cursor:pointer">📤 ارفع غلاف من الجهاز<input id="a_file" type="file" accept="image/*" hidden></label><span class="okmsg" id="a_upmsg"></span></div></div>
 </div>
 <div class="row2">
 <div class="field"><label>العنوان (عربي)</label><input id="a_tar" type="text"></div>
@@ -254,7 +255,7 @@ td input[type=text],td input[type=number],td select{width:100%;padding:7px 9px;b
 
 <div class="panel" id="pSections">
 <p class="tiny">الأقسام هي مجموعات الموقع (التيشيرتات، اللينن...). إخفاء قسم يخفيه من الموقع والفلاتر.</p>
-<table><thead><tr><th>ID</th><th>EN</th><th>AR</th><th>وصف EN</th><th>وصف AR</th><th>صورة</th><th>ظاهر؟</th><th></th></tr></thead>
+<table><thead><tr><th>ID</th><th>EN</th><th>AR</th><th>وصف EN</th><th>وصف AR</th><th>صورة</th><th>رفع</th><th>ظاهر؟</th><th></th></tr></thead>
 <tbody id="secRows"></tbody></table>
 <div class="btnrow"><button class="ghostb" id="addSecBtn">＋ قسم جديد</button><button class="save" id="saveSecs">💾 حفظ الأقسام</button><span class="okmsg" id="msgS"></span></div>
 </div>
@@ -275,7 +276,8 @@ td input[type=text],td input[type=number],td select{width:100%;padding:7px 9px;b
 <div class="field"><label>وصف البنر (English)</label><input id="hs_en" type="text" dir="ltr"></div>
 </div>
 <div class="field"><label>صورة البنر (اتركها فاضية للصورة الحالية)</label>
-<div class="row2"><select id="th_hero_pick"></select><input id="th_hero" type="text" dir="ltr" placeholder="assets/hero.jpg أو رابط"></div></div>
+<div class="row2"><select id="th_hero_pick"></select><input id="th_hero" type="text" dir="ltr" placeholder="assets/hero.jpg أو رابط"></div>
+<div class="btnrow" style="margin-top:8px"><label class="ghostb" style="cursor:pointer">📤 ارفع بنر من الجهاز<input id="th_file" type="file" accept="image/*" hidden></label><span class="okmsg" id="th_upmsg"></span></div></div>
 <div class="field"><label><input type="checkbox" id="pr_show"> شريط عرض متحرك (عدّاد تنازلي)</label></div>
 <div class="row2">
 <div class="field"><label>نص العرض (عربي)</label><input id="pr_ar" type="text"></div>
@@ -385,7 +387,9 @@ td input[type=text],td input[type=number],td select{width:100%;padding:7px 9px;b
 </div>
 <div class="field"><label>الوصف EN</label><textarea id="e_den" dir="ltr"></textarea></div>
 <div class="field"><label>الوصف AR</label><textarea id="e_dar"></textarea></div>
-<div class="field"><label>الصور (سطر لكل صورة — الأولى هي الرئيسية)</label><textarea id="e_imgs" dir="ltr" style="min-height:70px"></textarea><p class="small">صور الموقع: assets/p-tee-white.jpg ... أو رابط كامل https://...</p></div>
+<div class="field"><label>الصور (سطر لكل صورة — الأولى هي الرئيسية)</label><textarea id="e_imgs" dir="ltr" style="min-height:70px"></textarea><p class="small">الصق رابط صورة، أو ارفع من جهازك 👇</p>
+<div class="btnrow" style="margin-top:8px"><label class="ghostb" style="cursor:pointer">📤 ارفع صور من الجهاز<input id="e_files" type="file" accept="image/*" multiple hidden></label><span class="okmsg" id="e_upmsg"></span></div>
+<div id="e_prev" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"></div></div>
 <div class="field"><label>SEO Title (عنوان المنتج في جوجل)</label><input id="e_st" type="text" dir="ltr"></div>
 <div class="field"><label>SEO Description</label><textarea id="e_sd" dir="ltr" style="min-height:60px"></textarea></div>
 <div class="row2">
@@ -544,6 +548,7 @@ window.openEditor=function(id){
  $('#e_den').value=p.desc_en||'';$('#e_dar').value=p.desc_ar||'';
  $('#e_imgs').value=((p.imgs&&p.imgs.length?p.imgs:(p.img?[p.img]:[]))||[]).join('\n');
  $('#e_st').value=p.seo_title||'';$('#e_sd').value=p.seo_desc||'';
+ try{$('#e_imgs').oninput();}catch(e){}
  $('#e_sf').value=(p.sale_from||'').slice(0,10);$('#e_sto').value=(p.sale_to||'').slice(0,10);
  $('#edMsg').textContent='';$('#editor').classList.add('show');
 };
@@ -556,6 +561,22 @@ window.delProduct=function(id){
  save(s);renderRows();logAction('حذف منتج',{id:String(id)});
 };
 $('#addProdBtn').onclick=()=>openEditor('c'+Date.now().toString(36));
+$('#e_imgs').oninput=()=>{
+ const arr=$('#e_imgs').value.split('\n').map(x=>x.trim()).filter(Boolean);
+ $('#e_prev').innerHTML=arr.map(u=>`<img src="${u}" style="width:56px;height:68px;object-fit:cover;border-radius:8px" onerror="this.style.opacity=.2">`).join('');
+};
+$('#e_files').onchange=async e=>{
+ const files=[...e.target.files]; if(!files.length)return;
+ $('#e_upmsg').textContent='جاري الرفع... ('+files.length+')';
+ const urls=await uploadFiles(files);
+ if(urls.length){
+  const cur=$('#e_imgs').value.split('\n').map(x=>x.trim()).filter(Boolean);
+  $('#e_imgs').value=cur.concat(urls).join('\n');
+  $('#e_imgs').oninput();
+  $('#e_upmsg').textContent='✅ اترفع '+urls.length;
+ } else $('#e_upmsg').textContent='';
+ e.target.value=''; setTimeout(()=>$('#e_upmsg').textContent='',3000);
+};
 $('#edClose').onclick=()=>$('#editor').classList.remove('show');
 $('#edCopy').onclick=()=>{
  const u='https://mmetwily1-sudo.github.io/varnoto/product.html?id='+EDIT_ID;
@@ -591,8 +612,16 @@ function renderSecs(){
   <td><input type="text" data-k="sub_en" value="${(x.sub_en||'').replace(/"/g,'&quot;')}"></td>
   <td><input type="text" data-k="sub_ar" value="${(x.sub_ar||x.ar_sub||'').replace(/"/g,'&quot;')}"></td>
   <td><input type="text" data-k="img" value="${x.img||''}" dir="ltr" style="font-size:11px"></td>
+  <td style="white-space:nowrap"><label class="ghostb" style="padding:6px 10px;cursor:pointer">📤<input type="file" accept="image/*" data-upfile hidden></label></td>
   <td style="text-align:center"><input type="checkbox" data-k="visible" ${x.visible!==false?'checked':''} style="width:20px;height:20px"></td>
   <td><button class="del" data-del="${i}">🗑</button></td></tr>`).join('');
+ document.querySelectorAll('#secRows [data-upfile]').forEach(inp=>inp.onchange=async()=>{
+  if(!inp.files.length)return;
+  inp.disabled=true;
+  const urls=await uploadFiles([inp.files[0]]);
+  if(urls[0]){const tx=inp.closest('tr').querySelector('[data-k="img"]');if(tx)tx.value=urls[0];}
+  inp.disabled=false;inp.value='';
+ });
  document.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{
   const s=load();const cur=(Array.isArray(s.sections)&&s.sections.length?s.sections.slice():getSecs());
   cur.splice(Number(b.dataset.del),1);s.sections=cur;save(s);renderSecs();logAction('حذف قسم',{});
@@ -633,6 +662,22 @@ function fillTheme(){
  $('#sh_col').checked=sh.collections!==false;$('#sh_about').checked=sh.about!==false;$('#sh_contact').checked=sh.contact!==false;
 }
 $('#th_hero_pick').onchange=e=>{if(e.target.value)$('#th_hero').value=e.target.value;};
+$('#th_file').onchange=async e=>{
+ if(!e.target.files.length)return;
+ $('#th_upmsg').textContent='جاري الرفع...';
+ const urls=await uploadFiles([e.target.files[0]]);
+ if(urls[0]){$('#th_hero').value=urls[0];$('#th_upmsg').textContent='✅ اترفع';}
+ else $('#th_upmsg').textContent='';
+ e.target.value='';setTimeout(()=>$('#th_upmsg').textContent='',3000);
+};
+$('#a_file').onchange=async e=>{
+ if(!e.target.files.length)return;
+ $('#a_upmsg').textContent='جاري الرفع...';
+ const urls=await uploadFiles([e.target.files[0]]);
+ if(urls[0]){$('#a_cover').value=urls[0];$('#a_upmsg').textContent='✅ اترفع';}
+ else $('#a_upmsg').textContent='';
+ e.target.value='';setTimeout(()=>$('#a_upmsg').textContent='',3000);
+};
 $('#saveTheme').onclick=()=>{
  const s=load();
  s.theme={colors:{bg:$('#th_bg').value,ink:$('#th_ink').value,acc:$('#th_acc').value},
@@ -1062,6 +1107,37 @@ $('#ntTest').onclick=async()=>{$('#ntMsg').textContent='جاري الإرسال.
 function notifyOrder(o){
  const n=ntGet();if(!n.on)return;
  ntSend('🧾 طلب جديد #'+o.id+' — '+(o.total||'')+' EGP\n'+(o.customer_name||'')+' — '+(o.customer_phone||''));
+}
+
+// uploads (device → Supabase Storage, auto-resized)
+async function prepImage(file){
+ try{
+  const bmp=await createImageBitmap(file);
+  const maxDim=1400, sc=Math.min(1,maxDim/Math.max(bmp.width,bmp.height));
+  if(sc>=1&&file.size<600*1024) return file;
+  const c=document.createElement('canvas');
+  c.width=Math.round(bmp.width*sc);c.height=Math.round(bmp.height*sc);
+  c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);
+  const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',0.85));
+  if(!blob) return file;
+  return new File([blob],file.name.replace(/\.[^.]+$/,'')+'.jpg',{type:'image/jpeg'});
+ }catch(e){return file;}
+}
+async function uploadFiles(files,onOne){
+ const c=sb(); if(!c){alert('سجل دخول المدير أولاً');return [];}
+ const urls=[];
+ for(const f0 of files){
+  try{
+   const f=await prepImage(f0);
+   const ext=(f.name.split('.').pop()||'jpg').toLowerCase().slice(0,4);
+   const path='products/'+Date.now().toString(36)+'-'+Math.floor(Math.random()*1e6)+'.'+ext;
+   const up=await c.storage.from('product-images').upload(path,f,{contentType:f.type||'image/jpeg'});
+   if(up.error){alert('فشل الرفع: '+up.error.message);continue;}
+   const pu=c.storage.from('product-images').getPublicUrl(path);
+   urls.push(pu.data.publicUrl); if(onOne)onOne(pu.data.publicUrl);
+  }catch(e){alert('فشل الرفع');}
+ }
+ return urls;
 }
 
 // backup
