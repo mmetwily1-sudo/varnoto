@@ -36,7 +36,7 @@ jobs:
       - name: Install + sync Capacitor
         working-directory: mobile
         run: |
-          npm ci
+          npm install --no-audit --no-fund
           (test -d android || npx cap add android)
           npx cap sync
 
