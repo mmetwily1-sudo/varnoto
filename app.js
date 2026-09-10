@@ -363,7 +363,8 @@ function trackEv(type){
   try{
     if(!supaOn()) return;
     let sid=''; try{ sid=sessionStorage.getItem('vnt_sid')||('s'+Date.now().toString(36)+Math.floor(Math.random()*999)); sessionStorage.setItem('vnt_sid',sid); }catch(e){}
-    fetch(SUPABASE_URL+'/rest/v1/events',{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({type,page:location.pathname,session_id:sid})}).catch(()=>{});
+    let ref=''; try{ ref=document.referrer||''; if(ref.indexOf(location.hostname)>=0) ref=''; }catch(e){}
+    fetch(SUPABASE_URL+'/rest/v1/events',{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({type,page:location.pathname,session_id:sid,meta:{ref}})}).catch(()=>{});
   }catch(e){}
 }
 function pingView(){
@@ -372,7 +373,8 @@ function pingView(){
     if(sessionStorage.getItem('vnt_ping')) return;
     sessionStorage.setItem('vnt_ping','1');
     let sid=''; try{ sid=sessionStorage.getItem('vnt_sid')||('s'+Date.now().toString(36)+Math.floor(Math.random()*999)); sessionStorage.setItem('vnt_sid',sid); }catch(e){}
-    fetch(SUPABASE_URL+'/rest/v1/events',{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({type:'view',page:location.pathname,session_id:sid})}).catch(()=>{});
+    let ref=''; try{ ref=document.referrer||''; if(ref.indexOf(location.hostname)>=0) ref=''; }catch(e){}
+    fetch(SUPABASE_URL+'/rest/v1/events',{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({type:'view',page:location.pathname,session_id:sid,meta:{ref}})}).catch(()=>{});
   }catch(e){}
 }
 async function boot(){

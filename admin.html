@@ -88,6 +88,7 @@ td input[type=text],td input[type=number],td select{width:100%;padding:7px 9px;b
 </div>
 <div class="layout"><div class="side"><div class="tabs">
 <button class="tab active" data-t="pHome">🏠 الرئيسية</button>
+<button class="tab" data-t="pAnalytics">📊 التحليلات</button>
 <button class="tab" data-t="pOrders">🧾 الطلبات <span class="bdg" id="ordBdg" style="display:none">0</span></button>
 <button class="tab" data-t="pCarts">🛒 السلال المتروكة <span class="bdg" id="cartBdg" style="display:none">0</span></button>
 <button class="tab" data-t="pProducts">📦 المنتجات</button>
@@ -130,6 +131,48 @@ td input[type=text],td input[type=number],td select{width:100%;padding:7px 9px;b
 <table><thead><tr><th>المنتج</th><th>مباع</th><th>إيراد</th></tr></thead><tbody id="topRows"><tr><td colspan="3" class="tiny">—</td></tr></tbody></table></div>
 <div><h3>🧑 أحدث المشترين</h3>
 <table><thead><tr><th>الاسم</th><th>الموبايل</th><th>طلبات</th><th>صرف</th></tr></thead><tbody id="buyRows"><tr><td colspan="4" class="tiny">—</td></tr></tbody></table></div>
+</div>
+</div>
+
+<div class="panel" id="pAnalytics">
+<h3>📊 تحليلات المتجر (فورية — بدون إعداد)</h3>
+<div class="row2">
+<div><h3>📄 أكثر الصفحات زيارة</h3><table><thead><tr><th>الصفحة</th><th>الزيارات</th></tr></thead><tbody id="anPages"></tbody></table></div>
+<div><h3>🔗 مصادر الزوار</h3><table><thead><tr><th>المصدر</th><th>الزيارات</th></tr></thead><tbody id="anRefs"></tbody></table></div>
+</div>
+<h3 style="margin-top:16px">🕐 الذروة بالساعة (UTC)</h3>
+<div style="position:relative;height:220px"><canvas id="hourChart"></canvas></div>
+
+<h3 style="margin-top:22px">🔵 Google (Analytics + Search Console)</h3>
+<div class="acct">
+<p class="tiny">الخطوة مرة واحدة: Google Cloud → APIs & Services → Credentials → Create OAuth client ID (Web application) → Authorized JavaScript origins: <b dir="ltr">https://mmetwily1-sudo.github.io</b> → انسخ الـ Client ID هنا. وفعّل API: Google Analytics Data API + Search Console API.</p>
+<div class="row3">
+<div class="field"><label>OAuth Client ID</label><input id="g_client" type="text" dir="ltr"></div>
+<div class="field"><label>GA4 Property ID</label><input id="g_prop" type="text" dir="ltr" placeholder="123456789"></div>
+<div class="field"><label>GSC property (الرابط الكامل)</label><input id="g_site" type="text" dir="ltr" placeholder="https://mmetwily1-sudo.github.io/varnoto/"></div>
+</div>
+<div class="btnrow"><button class="save" id="gSave">حفظ</button><button class="ghostb" id="gConnect">🔗 ربط حساب جوجل</button><button class="ghostb" id="gOut">فصل</button><span class="okmsg" id="gMsg"></span></div>
+<div id="gaSec" style="display:none;margin-top:14px">
+<h3>GA4 — الجلسات (28 يوم)</h3>
+<div style="position:relative;height:240px"><canvas id="gaChart"></canvas></div>
+<h3 style="margin-top:14px">Search Console — أهم الاستعلامات</h3>
+<table><thead><tr><th>الاستعلام</th><th>نقرات</th><th>ظهور</th><th>CTR</th><th>الترتيب</th></tr></thead><tbody id="gscRows"></tbody></table>
+</div>
+
+<h3 style="margin-top:22px">📘 فيسبوك / انستجرام (Meta)</h3>
+<div class="acct">
+<p class="tiny">من developers.facebook.com: أنشئ تطبيق → أضف منتج Page Insights → من Graph API Explorer طلّع Page Access Token بصلاحية read_insights والصقه هنا مع Page ID.</p>
+<div class="row3">
+<div class="field"><label>Page Access Token</label><input id="m_tok" type="password" dir="ltr"></div>
+<div class="field"><label>Page ID</label><input id="m_page" type="text" dir="ltr"></div>
+<div class="field"><label>&nbsp;</label><button class="save" id="mLoad" style="width:100%">تحميل الإحصائيات</button></div>
+</div>
+<div class="stats" id="metaStats" style="display:none">
+<div class="stat"><b id="mtFol">–</b><span>المتابعون</span></div>
+<div class="stat"><b id="mtReach">–</b><span>الوصول (28 يوم)</span></div>
+<div class="stat"><b id="mtEng">–</b><span>التفاعل (28 يوم)</span></div>
+</div>
+<p class="tiny" id="mMsg"></p>
 </div>
 </div>
 
@@ -505,7 +548,7 @@ async function enterDash(email){
     setSync('👤 وضع طاقم — عرض الطلبات وتغيير حالتها فقط');
    }}
  }catch(e){}
- syncFromCloud();loadHome();loadOrders();loadLog();subscribeOrders();loadZonesAdmin();ntFill();loadSubs();loadArts();loadCarts();loadBosta();
+ syncFromCloud();loadHome();loadOrders();loadLog();subscribeOrders();loadZonesAdmin();ntFill();loadSubs();loadArts();loadCarts();loadBosta();loadAnalytics();
  if('Notification' in window&&Notification.permission==='default'){try{Notification.requestPermission();}catch(e){}}
 }
 let ROLE='admin';
@@ -538,7 +581,7 @@ $('#chPwBtn').onclick=async()=>{
   if(r.error){alert('فشل التغيير');}else{$('#npw').value='';alert('✅ اتغيرت كلمة السر');}
  }catch(e){alert('تعذر الاتصال');}
 };
-document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===b.dataset.t));if(b.dataset.t==='pLog')loadLog();if(b.dataset.t==='pOrders')loadOrders();if(b.dataset.t==='pCoupons')loadCoupons();if(b.dataset.t==='pReviews')loadReviews();if(b.dataset.t==='pHome')loadHome();if(b.dataset.t==='pShip'){loadZonesAdmin();fillPayExtra();loadBosta();}if(b.dataset.t==='pStaff')return;if(b.dataset.t==='pCust'){loadSubs();}if(b.dataset.t==='pArts')loadArts();if(b.dataset.t==='pCarts')loadCarts();});
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===b.dataset.t));if(b.dataset.t==='pLog')loadLog();if(b.dataset.t==='pOrders')loadOrders();if(b.dataset.t==='pCoupons')loadCoupons();if(b.dataset.t==='pReviews')loadReviews();if(b.dataset.t==='pHome')loadHome();if(b.dataset.t==='pShip'){loadZonesAdmin();fillPayExtra();loadBosta();}if(b.dataset.t==='pStaff')return;if(b.dataset.t==='pCust'){loadSubs();}if(b.dataset.t==='pArts')loadArts();if(b.dataset.t==='pCarts')loadCarts();if(b.dataset.t==='pAnalytics')loadAnalytics();});
 
 // products
 function renderRows(){
@@ -817,6 +860,98 @@ window.restock=function(id){
  f.qty=Number(f.qty||0)+20; f.stock=true;
  s.products=cur;save(s);logAction('تزويد مخزون',{id:String(id),qty:f.qty});
  renderRows();renderStockAlerts();loadHome();
+};
+
+// analytics hub
+let HOURCH=null, GACH=null;
+function anGet(){try{return JSON.parse(localStorage.getItem('varnoto_analytics'))||{};}catch(e){return{};}}
+async function loadAnalytics(){
+ if(LOCAL_MODE)return;
+ // first-party (last 30 days, cap 5000 rows)
+ try{
+  const h=await H();
+  const since=new Date(Date.now()-30*864e5).toISOString();
+  const r=await fetch(SUPA_URL+'/rest/v1/events?select=page,created_at,meta,type&created_at=gte.'+encodeURIComponent(since)+'&order=created_at.desc&limit=5000',{headers:h});
+  if(!r.ok)return;
+  const rows=await r.json();
+  const views=rows.filter(x=>x.type==='view');
+  const byPage={},byRef={},byHour=new Array(24).fill(0);
+  views.forEach(v=>{
+   const p=(v.page||'/').replace('/varnoto/','/')||'/';byPage[p]=(byPage[p]||0)+1;
+   let ref='مباشر';try{const u=((v.meta||{}).ref)||'';if(u)ref=new URL(u).hostname.replace(/^www\./,'');}catch(e){}
+   byRef[ref]=(byRef[ref]||0)+1;
+   try{byHour[new Date(v.created_at).getUTCHours()]++;}catch(e){}
+  });
+  $('#anPages').innerHTML=Object.entries(byPage).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([p,n])=>`<tr><td dir="ltr" style="font-size:12px">${p}</td><td><b>${n}</b></td></tr>`).join('')||'<tr><td colspan="2" class="tiny">لا بيانات بعد</td></tr>';
+  $('#anRefs').innerHTML=Object.entries(byRef).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([p,n])=>`<tr><td style="font-size:12px">${p}</td><td><b>${n}</b></td></tr>`).join('');
+  try{
+   if(HOURCH)HOURCH.destroy();
+   HOURCH=new Chart($('#hourChart'),{type:'bar',data:{labels:[...Array(24).keys()].map(x=>x+':00'),datasets:[{label:'الزيارات',data:byHour,backgroundColor:'#141414'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
+  }catch(e){}
+ }catch(e){}
+ // google session restore
+ try{
+  const m=(location.hash||'').match(/access_token=([^&]+)/);
+  if(m){sessionStorage.setItem('vnt_gtok',decodeURIComponent(m[1]));history.replaceState(null,'',location.pathname+location.search);fillGoogle();loadGoogle();}
+ }catch(e){}
+ const a=anGet();
+ $('#g_client').value=a.g_client||'';$('#g_prop').value=a.ga4_prop||'';$('#g_site').value=a.gsc_site||'https://mmetwily1-sudo.github.io/varnoto/';
+ if(sessionStorage.getItem('vnt_gtok')){fillGoogle();loadGoogle();}
+ const m2=anGet();
+ $('#m_tok').value=m2.meta_token||'';$('#m_page').value=m2.meta_page||'';
+}
+function fillGoogle(){const on=!!sessionStorage.getItem('vnt_gtok');$('#gMsg').textContent=on?'✅ مربوط بحساب جوجل':'';}
+$('#gSave').onclick=()=>{localStorage.setItem('varnoto_analytics',JSON.stringify(Object.assign(anGet(),{g_client:$('#g_client').value.trim(),ga4_prop:$('#g_prop').value.trim(),gsc_site:$('#g_site').value.trim(),meta_token:$('#m_tok').value.trim(),meta_page:$('#m_page').value.trim()})));$('#gMsg').textContent='✅ اتحفظ';setTimeout(()=>{if($('#gMsg').textContent==='✅ اتحفظ')$('#gMsg').textContent='';},2500);};
+$('#gConnect').onclick=()=>{
+ const a=anGet();
+ if(!a.g_client){alert('الصق OAuth Client ID الأول واحفظ');return;}
+ const u='https://accounts.google.com/o/oauth2/v2/auth?client_id='+encodeURIComponent(a.g_client)+'&redirect_uri='+encodeURIComponent('https://mmetwily1-sudo.github.io/varnoto/admin.html')+'&response_type=token&scope='+encodeURIComponent('https://www.googleapis.com/auth/analytics.readonly https://www.googleapis.com/auth/webmasters.readonly')+'&prompt=consent&include_granted_scopes=true';
+ location.href=u;
+};
+$('#gOut').onclick=()=>{sessionStorage.removeItem('vnt_gtok');$('#gaSec').style.display='none';fillGoogle();};
+async function loadGoogle(){
+ const a=anGet(),tok=sessionStorage.getItem('vnt_gtok');
+ if(!tok)return;
+ $('#gaSec').style.display='';
+ // GA4
+ try{
+  if(a.ga4_prop){
+   const r=await fetch('https://analyticsdata.googleapis.com/v1beta/properties/'+encodeURIComponent(a.ga4_prop)+':runReport',{method:'POST',headers:{Authorization:'Bearer '+tok,'Content-Type':'application/json'},body:JSON.stringify({dateRanges:[{startDate:'28daysAgo',endDate:'today'}],dimensions:[{name:'date'}],metrics:[{name:'sessions'},{name:'totalUsers'}],orderBys:[{dimension:{dimensionName:'date'}}]})});
+   const j=await r.json();
+   const rows=(j.rows||[]),labels=rows.map(x=>x.dimensionValues[0].value.slice(4)),ss=rows.map(x=>Number(x.metricValues[0].value)),uu=rows.map(x=>Number(x.metricValues[1].value));
+   try{
+    if(GACH)GACH.destroy();
+    GACH=new Chart($('#gaChart'),{data:{labels,datasets:[{type:'line',label:'الجلسات',data:ss,borderColor:'#141414',tension:.3},{type:'line',label:'الزوار',data:uu,borderColor:'#c9a24b',tension:.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{rtl:true}}}});
+   }catch(e){}
+  }
+ }catch(e){}
+ // GSC
+ try{
+  if(a.gsc_site){
+   const end=new Date(),start=new Date(Date.now()-28*864e5);
+   const f=d=>d.toISOString().slice(0,10);
+   const r=await fetch('https://www.googleapis.com/webmasters/v3/sites/'+encodeURIComponent(a.gsc_site)+'/searchAnalytics',{method:'POST',headers:{Authorization:'Bearer '+tok,'Content-Type':'application/json'},body:JSON.stringify({startDate:f(start),endDate:f(end),dimensions:['query'],rowLimit:25})});
+   const j=await r.json();
+   $('#gscRows').innerHTML=(j.rows||[]).length?(j.rows||[]).map(x=>`<tr><td>${x.keys[0]}</td><td>${x.clicks}</td><td>${x.impressions}</td><td>${(x.ctr*100).toFixed(1)}%</td><td>${x.position.toFixed(1)}</td></tr>`).join(''):'<tr><td colspan="5" class="tiny">لا بيانات — تأكد من إضافة الموقع في Search Console</td></tr>';
+  }
+ }catch(e){}
+}
+$('#mLoad').onclick=async()=>{
+ const tok=$('#m_tok').value.trim(),pg=$('#m_page').value.trim();
+ if(!tok||!pg){$('#mMsg').textContent='اكتب التوكن والـ Page ID';return;}
+ localStorage.setItem('varnoto_analytics',JSON.stringify(Object.assign(anGet(),{meta_token:tok,meta_page:pg})));
+ $('#mMsg').textContent='جاري التحميل...';
+ try{
+  const p=await (await fetch('https://graph.facebook.com/v19.0/'+encodeURIComponent(pg)+'?fields=name,followers_count&access_token='+encodeURIComponent(tok))).json();
+  if(p.error){$('#mMsg').textContent='خطأ: '+p.error.message;return;}
+  const ins=await (await fetch('https://graph.facebook.com/v19.0/'+encodeURIComponent(pg)+'/insights?metric=page_impressions_unique,page_post_engagements&period=days_28&access_token='+encodeURIComponent(tok))).json();
+  const val=n=>{try{const d=(ins.data||[]).find(x=>x.name===n);const v=d&&d.values&&d.values[d.values.length-1];return v?v.value:'—';}catch(e){return '—';}};
+  $('#metaStats').style.display='flex';
+  $('#mtFol').textContent=p.followers_count!=null?p.followers_count:'—';
+  $('#mtReach').textContent=val('page_impressions_unique');
+  $('#mtEng').textContent=val('page_post_engagements');
+  $('#mMsg').textContent='✅ '+ (p.name||'');
+ }catch(e){$('#mMsg').textContent='تعذر الاتصال';}
 };
 
 // orders

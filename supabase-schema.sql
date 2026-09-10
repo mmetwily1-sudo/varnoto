@@ -382,6 +382,7 @@ end; $F$;
 grant execute on function loyalty_balance(text) to anon, authenticated;
 
 -- 5) Visit tracking (public insert-only, admin read)
+-- events(id, created_at, type, page, session_id, meta jsonb)
 create table if not exists events (
   id bigint generated always as identity primary key,
   created_at timestamptz default now(),
