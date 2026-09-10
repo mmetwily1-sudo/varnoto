@@ -30,7 +30,8 @@ jobs:
         working-directory: mobile
         run: |
           npm install --no-audit --no-fund
-          (test -d ios || npx cap add ios)
+          rm -rf ios
+          npx cap add ios
           npx cap sync
 
       - name: Build unsigned IPA
