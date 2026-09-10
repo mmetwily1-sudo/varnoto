@@ -154,7 +154,7 @@
   <div class="cart-foot">
     <div class="cust">
       <input id="custName" type="text" data-en-ph="Your name (optional)" data-ar-ph="اسمك (اختياري)" placeholder="اسمك (اختياري)">
-      <input id="custPhone" type="tel" dir="ltr" placeholder="01xxxxxxxxx" oninput="refreshLoyalty()">
+      <input id="custPhone" type="tel" dir="ltr" placeholder="01xxxxxxxxx" oninput="refreshLoyalty();persistCart()">
       <div id="loyBox" style="display:none;background:#fff8e6;border:1px solid #e0a100;border-radius:10px;padding:8px 12px;font-size:13px">
         ⭐ <span data-en="Your points:" data-ar="نقاطك:">نقاطك:</span> <b id="loyPts">0</b>
         <span class="tiny" id="loyHint"></span>

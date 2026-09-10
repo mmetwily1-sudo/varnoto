@@ -1,0 +1,52 @@
+name: Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'mobile/**'
+      - 'index.html'
+      - 'app.js'
+      - 'style.css'
+      - 'assets/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: temurin
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Stage web assets
+        run: |
+          mkdir -p mobile/www
+          cp index.html product.html track.html articles.html article.html terms.html privacy.html shipping.html faq.html admin.html style.css app.js pages.js gtm.js sw.js manifest.json sitemap.xml robots.txt mobile/www/ 2>/dev/null || true
+          cp -r assets mobile/www/
+
+      - name: Install + sync Capacitor
+        working-directory: mobile
+        run: |
+          npm ci
+          (test -d android || npx cap add android)
+          npx cap sync
+
+      - name: Build debug APK
+        working-directory: mobile/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: varnoto-debug-apk
+          path: mobile/android/app/build/outputs/apk/debug/app-debug.apk

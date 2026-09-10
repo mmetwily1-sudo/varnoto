@@ -185,7 +185,24 @@ function renderProducts(){
     </div>`).join('') : `<p>${t('No products found.','مفيش منتجات مطابقة.')}</p>`;
 }
 
-function saveCart(){ const sc=$('#cartCount'); localStorage.setItem('varnoto_cart', JSON.stringify(cart)); renderCart(); }
+function saveCart(){ localStorage.setItem('varnoto_cart', JSON.stringify(cart)); renderCart(); persistCart(); }
+let saveT=null;
+function persistCart(){
+  if(!supaOn()) return;
+  try{clearTimeout(saveT);}catch(e){}
+  saveT=setTimeout(()=>{
+    let sid=''; try{sid=sessionStorage.getItem('vnt_sid')||'';}catch(e){}
+    if(!sid||!cart.length){
+      if(sid&&!cart.length){
+        fetch(SUPABASE_URL+'/rest/v1/rpc/save_cart',{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_session:sid,p_phone:null,p_items:[],p_total:0})}).catch(()=>{});
+      }
+      return;
+    }
+    const ph=($('#custPhone')&&$('#custPhone').value||'').replace(/\D/g,'');
+    const items=cart.map(r=>{const p=findP(r.id);return {id:String(r.id),name:p?p.en:'',q:r.q,price:p?p.price:0};});
+    fetch(SUPABASE_URL+'/rest/v1/rpc/save_cart',{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_session:sid,p_phone:ph||null,p_items:items,p_total:cartSubtotal()})}).catch(()=>{});
+  },1500);
+}
 function findP(id){ return PRODUCTS.find(x=>String(x.id)===String(id)); }
 function addToCart(id){
   const p = findP(id); if(!p||!p.stock) return;

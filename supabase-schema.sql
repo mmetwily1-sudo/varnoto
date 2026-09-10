@@ -278,6 +278,46 @@ begin
 end; $F$;
 grant execute on function my_orders(text,int) to anon, authenticated;
 
+-- 12) Pack-5: abandoned carts + integrations vault + order tracking
+create table if not exists carts (
+  session_id text primary key,
+  phone text, items jsonb, total int default 0,
+  reminded boolean default false,
+  created_at timestamptz default now(), updated_at timestamptz default now()
+);
+alter table carts enable row level security;
+drop policy if exists "varnoto carts admin" on carts;
+create policy "varnoto carts admin" on carts for all
+  using ((auth.jwt()->'user_metadata'->>'role')='admin')
+  with check ((auth.jwt()->'user_metadata'->>'role')='admin');
+
+create or replace function save_cart(p_session text, p_phone text, p_items jsonb, p_total int)
+returns boolean language plpgsql security definer set search_path = public as $F$
+begin
+ if p_session is null or p_session = '' then return false; end if;
+ if p_items is null or jsonb_array_length(p_items) = 0 then
+  delete from carts where session_id = p_session;
+  return true;
+ end if;
+ insert into carts(session_id, phone, items, total, updated_at)
+ values (p_session, nullif(regexp_replace(coalesce(p_phone,''),'\D','','g'),''), p_items, coalesce(p_total,0), now())
+ on conflict (session_id) do update set phone = excluded.phone, items = excluded.items, total = excluded.total, updated_at = now();
+ return true;
+end; $F$;
+grant execute on function save_cart(text,text,jsonb,int) to anon, authenticated;
+
+create table if not exists integrations (
+  provider text primary key, secret text,
+  extra jsonb default '{}', updated_at timestamptz default now()
+);
+alter table integrations enable row level security;
+drop policy if exists "varnoto integrations admin" on integrations;
+create policy "varnoto integrations admin" on integrations for all
+  using ((auth.jwt()->'user_metadata'->>'role')='admin')
+  with check ((auth.jwt()->'user_metadata'->>'role')='admin');
+
+alter table orders add column if not exists tracking text;
+
 -- 11) Product image storage (public read, admin upload)
 insert into storage.buckets (id, name, public) values ('product-images','product-images', true)
 on conflict (id) do update set public = true;
