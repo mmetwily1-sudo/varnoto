@@ -1,5 +1,5 @@
-// VARNOTO service worker v2 — safe caching: never store failures, easy purge
-const CACHE='varnoto-v2';
+// VARNOTO service worker v3 — safe caching: never store failures, easy purge
+const CACHE='varnoto-v3';
 const CORE=['./','./index.html','./style.css','./app.js','./manifest.json'];
 self.addEventListener('install',e=>{
  e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting()).catch(()=>{}));
