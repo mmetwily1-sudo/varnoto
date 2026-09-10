@@ -1,4 +1,14 @@
 // VARNOTO — original demo store inspired by galvanoegy.com (no copied assets/text)
+// kill-switch: ?fresh=1 wipes service worker + caches, then reloads clean
+try{
+ if(/(?:\?|&)fresh=1(?:&|$)/.test(location.search)){
+  (async()=>{
+   try{ if('serviceWorker' in navigator){ const rs=await navigator.serviceWorker.getRegistrations(); for(const r of rs){try{await r.unregister();}catch(e){}} } }catch(e){}
+   try{ if(window.caches){ const ks=await caches.keys(); for(const k of ks){try{await caches.delete(k);}catch(e){}} } }catch(e){}
+   location.replace(location.pathname);
+  })();
+ }
+}catch(e){}
 let LANG = 'ar';
 const $ = (s) => document.querySelector(s);
 
@@ -331,7 +341,11 @@ async function pullRemote(){
 }
 function subscribeRealtime(){
   try{
-    if(!supaOn()||!window.supabase) return;
+    if(!supaOn()) return;
+    if(!window.supabase){
+      window.addEventListener('load',()=>{try{setTimeout(subscribeRealtime,800);}catch(e){}},{once:true});
+      return;
+    }
     window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY).channel('store')
       .on('postgres_changes',{event:'*',schema:'public',table:'store_config'},p=>{
         const d=p.new&&p.new.data;
