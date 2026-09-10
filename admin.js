@@ -988,5 +988,4 @@ function fillAll(){
  steps.forEach(([name,fn])=>{ try{fn();}catch(e){showErr(name+': '+(e&&e.message||e));} });
  selfTest();
 }
-}
 fillAll();
