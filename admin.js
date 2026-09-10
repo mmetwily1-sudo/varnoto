@@ -1,5 +1,11 @@
 
 const KEY='varnoto_store_v1', EMERGENCY_PIN='2026';
+try{
+ if(/(?:\?|&)reset=1(?:&|$)/.test(location.search)){
+  try{localStorage.removeItem(KEY);}catch(e){}
+  location.replace(location.pathname);
+ }
+}catch(e){}
 const DEFAULT_NAV=[{en:'Home',ar:'الرئيسية',href:'#home'},{en:'Collections',ar:'المجموعات',href:'#collections'},{en:'Best Selling',ar:'الأكثر مبيعاً',href:'#best'},{en:'About',ar:'عن البراند',href:'#about'},{en:'Contact',ar:'تواصل معنا',href:'#contact'}];
 const DEFAULT_SECS=[
  {id:'tshirt',en:'T-shirts',ar:'تيشيرتات',sub_en:'heavyweight',sub_ar:'قطن تقيل',img:'assets/p-tee-white.jpg',visible:true},
