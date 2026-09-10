@@ -1,0 +1,47 @@
+name: iOS IPA
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'mobile/**'
+      - 'index.html'
+      - 'app.js'
+      - 'style.css'
+      - 'assets/**'
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Stage web assets
+        run: |
+          mkdir -p mobile/www
+          cp index.html product.html track.html articles.html article.html terms.html privacy.html shipping.html faq.html admin.html style.css app.js pages.js gtm.js sw.js manifest.json sitemap.xml robots.txt mobile/www/ 2>/dev/null || true
+          cp -r assets mobile/www/
+
+      - name: Install + sync Capacitor
+        working-directory: mobile
+        run: |
+          npm install --no-audit --no-fund
+          (test -d ios || npx cap add ios)
+          npx cap sync
+
+      - name: Build unsigned IPA
+        working-directory: mobile
+        run: |
+          xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Debug -destination 'generic/platform=iOS' -archivePath $PWD/build/App.xcarchive CODE_SIGNING_ALLOWED=NO archive
+          mkdir -p Payload
+          cp -r build/App.xcarchive/Products/Applications/App.app Payload/
+          zip -r VARNOTO-unsigned.ipa Payload
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: varnoto-unsigned-ipa
+          path: mobile/VARNOTO-unsigned.ipa
