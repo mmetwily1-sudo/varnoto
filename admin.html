@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>لوحة تحكم VARNOTO</title>
 <meta name="robots" content="noindex,nofollow">
+<script>window.addEventListener('error',function(e){try{var b=document.getElementById('errbox');if(b){b.style.display='block';var t=document.getElementById('errtxt');if(t)t.textContent+=('\n• '+(e.message||'error')+' @'+(e.lineno||'?'))}}catch(_){}});</script>
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 <link rel="stylesheet" href="style.css?v=3">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -69,6 +70,8 @@ td input[type=text],td input[type=number],td select{width:100%;padding:7px 9px;b
 </div></header>
 
 <div id="gate">
+<div id="errbox" style="display:none;background:#fdecea;border:1px solid #b3261e;border-radius:12px;padding:12px;margin-bottom:14px;text-align:start"><b>⚠ خطأ تقني (انسخه وابعته):</b><pre id="errtxt" dir="ltr" style="white-space:pre-wrap;font-size:12px"></pre></div>
+<noscript><p style="color:#b3261e;font-weight:800">فعّل JavaScript عشان الداشبورد تشتغل.</p></noscript>
 <h2>🔐 دخول الإدارة</h2>
 <p class="tiny" id="gateUser">حساب المدير فقط</p>
 <input id="em" type="email" dir="ltr" placeholder="email" autocomplete="username">
@@ -425,6 +428,7 @@ td input[type=text],td input[type=number],td select{width:100%;padding:7px 9px;b
 <div class="field"><label>&nbsp;</label><button class="save" id="chPwBtn" style="width:100%">تغيير كلمة السر</button></div>
 </div>
 <p class="tiny">وضع الطوارئ (بدون سحابة، حفظ محلي فقط): افتح الداشبورد برابط ينتهي بـ <b>#local</b> + رمز <b>2026</b>.</p>
+<p class="tiny" style="opacity:.5">build 2026-09-10 • v4</p>
 </div>
 </div>
 </div></div></div>
