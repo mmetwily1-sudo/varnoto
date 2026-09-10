@@ -191,7 +191,9 @@ function addToCart(id){
   const p = findP(id); if(!p||!p.stock) return;
   const f = cart.find(x=>String(x.id)===String(id));
   if(f) f.q++; else cart.push({id:String(p.id),q:1});
-  saveCart(); trackEv('cart_add'); openCart();
+  saveCart(); trackEv('cart_add');
+  pxEvent('AddToCart',{content_ids:[String(p.id)],content_name:p.en,value:p.price,currency:'EGP'});
+  openCart();
 }
 function renderCart(){
   const cc=$('#cartCount'); if(cc) cc.textContent = cart.reduce((a,b)=>a+b.q,0);
@@ -268,7 +270,29 @@ window.quick = (id)=>{
 };
 function closeModal(){ $('#quickModal').classList.remove('show'); }
 
-// ---- Cloud backend (Supabase) — filled after project creation ----
+// ---- Ad pixels (IDs from dashboard → Settings/SEO) ----
+function initPixels(){
+  let ig={}; try{ig=(getStore().integrations)||{};}catch(e){}
+  try{
+    if(ig.meta&&!window.fbq){
+      !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init',ig.meta);fbq('track','PageView');
+    }
+    if(ig.tiktok&&!window.ttq){
+      !function(w,d,t){w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=['page','track','identify','instances','debug','on','off','once','ready','alias','group','enableCookie','disableCookie'];ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.load=function(e){var n='https://analytics.tiktok.com/i18n/pixel/events.js';ttq._i=ttq._i||{};ttq._i[e]=[];ttq._i[e].push('https://analytics.tiktok.com/i18n/pixel/events.js');var o=d.createElement('script');o.type='text/javascript';o.async=!0;o.src=n+'?sdkid='+e+'&lib='+t;var a=d.getElementsByTagName('script')[0];a.parentNode.insertBefore(o,a)};ttq.load(ig.tiktok);ttq.page();}(window,document,'ttq');
+    }
+    if(ig.ga4&&!window.gtag){
+      const s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id='+encodeURIComponent(ig.ga4);document.head.appendChild(s);
+      window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments);};gtag('js',new Date());gtag('config',ig.ga4);
+    }
+  }catch(e){}
+}
+function pxEvent(name,params){
+  params=params||{};
+  try{if(window.fbq)fbq('track',name,params);}catch(e){}
+  try{if(window.ttq)ttq.track(name,params);}catch(e){}
+  try{if(window.gtag)gtag('event',name==='Purchase'?'purchase':(name==='AddToCart'?'add_to_cart':name),params);}catch(e){}
+}
 const SUPABASE_URL='https://xgokhpdhzafuluiqdtah.supabase.co', SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnb2tocGRoemFmdWx1aXFkdGFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5NjU0NDMsImV4cCI6MjEwNDU0MTQ0M30.2B-0GPvxh5KoXVM4jhN06hCt75LakazSC36bh637zQA';
 const supaOn=()=>SUPABASE_URL&&!SUPABASE_URL.startsWith('__')&&SUPABASE_KEY&&!SUPABASE_KEY.startsWith('__');
 async function pullRemote(){
@@ -337,6 +361,7 @@ async function boot(){
   pingView();
   loadZones();
   setLang('ar');
+  initPixels();
   subscribeRealtime();
 }
 
@@ -485,7 +510,7 @@ $('#checkoutBtn').onclick = async ()=>{
   if(cname) txt+='\nName: '+cname;
   if(cphone) txt+='\nPhone: '+cphone;
   window.open((window.VARNOTO_WA||'https://wa.me/201000000000')+'?text='+encodeURIComponent(txt),'_blank');
-  if(orderId){ cart=[]; COUPON=null; const ci=$('#couponIn'); if(ci)ci.value=''; saveCart(); closeCart(); refreshLoyalty(); alert(t('Order #'+orderId+' received! We will call you to confirm.','طلبك #'+orderId+' وصل! هنتصل بيك للتأكيد.')); }
+  if(orderId){ cart=[]; COUPON=null; const ci=$('#couponIn'); if(ci)ci.value=''; saveCart(); closeCart(); refreshLoyalty(); pxEvent('Purchase',{value:finalTotal,currency:'EGP',num_items:items.reduce((a,i)=>a+i.q,0)}); alert(t('Order #'+orderId+' received! We will call you to confirm.','طلبك #'+orderId+' وصل! هنتصل بيك للتأكيد.')); }
   if(orderId&&PAY==='paymob'){ payOnline(orderId,finalTotal); }
 };
 async function payOnline(orderId,amount){

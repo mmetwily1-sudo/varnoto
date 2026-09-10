@@ -325,6 +325,11 @@ td input[type=text],td input[type=number],td select{width:100%;padding:7px 9px;b
 <div class="field"><label>عنوان الموقع (يظهر في جوجل)</label><input id="seo_t" type="text" dir="ltr"></div>
 <div class="field"><label>وصف الموقع (Meta Description)</label><textarea id="seo_d" dir="ltr"></textarea></div>
 <div class="field"><label>صورة المشاركة (OG Image)</label><input id="seo_og" type="text" dir="ltr"></div>
+<h3 style="margin-top:18px">📊 بكسلات الإعلانات والتحليلات</h3>
+<p class="tiny">الصق الـ IDs فقط — الأكواد بتتركب تلقائياً في الموقع مع تتبع مشاهدة/سلة/شراء.</p>
+<div class="field"><label>Meta Pixel ID</label><input id="seo_meta" type="text" dir="ltr" placeholder="1234567890"></div>
+<div class="field"><label>TikTok Pixel ID</label><input id="seo_tt" type="text" dir="ltr" placeholder="ABCDEFGHIJ1234567890"></div>
+<div class="field"><label>Google Analytics 4 ID</label><input id="seo_ga" type="text" dir="ltr" placeholder="G-XXXXXXXXXX"></div>
 <p class="tiny">تحسينات المنتجات (العنوان والوصف لكل منتج) من زر ✏️ بجانب كل منتج في تبويب المنتجات — وتظهر في كروت البحث وبيانات المنتج المنظمة (JSON-LD).</p>
 <div class="btnrow"><button class="save" id="saveSEO">💾 حفظ SEO</button><span class="okmsg" id="msgSEO"></span></div>
 </div>
@@ -344,7 +349,8 @@ td input[type=text],td input[type=number],td select{width:100%;padding:7px 9px;b
 <div class="panel" id="pBackup">
 <p>حمّل نسخة من كل إعدادات المتجر، أو استرجعها على أي جهاز تاني.</p>
 <div class="btnrow">
-<button class="save" id="expBtn">⬇️ تحميل نسخة (JSON)</button>
+<button class="save" id="expBtn">⬇️ تحميل نسخة الإعدادات</button>
+<button class="ghostb" id="expFull">⬇️ نسخة شاملة (طلبات+عملاء+تقييمات)</button>
 <label class="save" style="background:#fff;color:#141414;border:1px solid #141414;cursor:pointer">⬆️ استرجاع نسخة<input id="impFile" type="file" accept=".json" hidden></label>
 <button class="reset" id="resetBtn">🗑 إعادة ضبط المصنع</button>
 </div>
@@ -679,10 +685,13 @@ function fillSEO(){
  $('#seo_t').value=seo.site_title||'VARNOTO | ملابس مصرية عصرية';
  $('#seo_d').value=seo.site_desc||'VARNOTO — براند ملابس مصري: تيشيرتات، قمصان لينن، جينز، سويت بانتس. خامات تقيلة وشحن سريع.';
  $('#seo_og').value=seo.og_image||'assets/hero.jpg';
+ const ig=s.integrations||{};
+ $('#seo_meta').value=ig.meta||'';$('#seo_tt').value=ig.tiktok||'';$('#seo_ga').value=ig.ga4||'';
 }
 $('#saveSEO').onclick=()=>{
  const s=load();s.seo={site_title:$('#seo_t').value.trim(),site_desc:$('#seo_d').value.trim(),og_image:$('#seo_og').value.trim()};
- save(s);logAction('تعديل SEO الموقع',{});
+ s.integrations={meta:$('#seo_meta').value.trim(),tiktok:$('#seo_tt').value.trim(),ga4:$('#seo_ga').value.trim()};
+ save(s);logAction('تعديل SEO والتكاملات',{});
  $('#msgSEO').textContent='✅ اتحفظ';setTimeout(()=>$('#msgSEO').textContent='',2500);
 };
 
@@ -770,7 +779,8 @@ function renderOrders(rows){
   <td style="font-size:12px">${itemsTxt(o.items)}</td><td><b>${o.total} EGP</b>${o.discount?`<br><span class="tiny" style="color:#1c7a3d">خصم ${o.discount}</span>`:''}</td>
   <td><span class="st-${o.status||'new'}">${ST_AR[o.status]||o.status}</span><br>
   <select data-st="${o.id}" style="margin-top:6px"><option value="">تغيير ←</option><option value="preparing">يتجهز</option><option value="shipped">اتشحن</option><option value="done">تم ✅</option></select><br>
-  <button class="ghostb" style="padding:4px 10px;margin-top:6px" onclick="printOrder(${o.id})">🖨 فاتورة</button></td></tr>`).join('')
+  <button class="ghostb" style="padding:4px 10px;margin-top:6px" onclick="printOrder(${o.id})">🖨 فاتورة</button>
+  <button class="ghostb" style="padding:4px 10px;margin-top:6px" onclick="printThermal(${o.id})">🧾 حرارية</button></td></tr>`).join('')
   :'<tr><td colspan="6" class="tiny">لا طلبات بعد — أول طلب هيظهر هنا لحظياً مع تنبيه صوتي.</td></tr>';
  document.querySelectorAll('[data-st]').forEach(sel=>sel.onchange=()=>{if(sel.value)setStatus(Number(sel.dataset.st),sel.value);});
 }
@@ -788,6 +798,22 @@ window.printOrder=function(id){
  +(o.discount?'<p>الخصم'+(o.coupon_code?' ('+o.coupon_code+')':'')+': -'+o.discount+' EGP</p>':'')
  +'<p class="tot">الإجمالي: '+o.total+' EGP (عند الاستلام)</p>'
  +'<p><button onclick="window.print()">🖨 طباعة</button></p></body></html>');
+ w.document.close();
+};
+window.printThermal=function(id){
+ const o=(ORDERS||[]).find(x=>Number(x.id)===Number(id)); if(!o)return;
+ const items=o.items||[];
+ const w=window.open('','_blank','width=320,height=700');
+ w.document.write('<html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>#'+o.id+'</title><style>body{font-family:Arial,Tahoma;width:72mm;margin:0 auto;padding:6px;color:#111;font-size:12px}h2{text-align:center;margin:4px 0;font-size:16px}.c{text-align:center}.it{display:flex;justify-content:space-between;border-bottom:1px dashed #999;padding:3px 0}.tot{font-weight:bold;font-size:14px}button{width:100%;padding:8px;margin-top:8px}@media print{button{display:none}}</style></head><body>'
+ +'<h2>VARNOTO</h2><div class="c">varnoto.com<br>طلب #'+o.id+' — '+fmtDate(o.created_at)+'</div><hr>'
+ +'<div>'+(o.customer_name||'')+' — <span dir="ltr">'+(o.customer_phone||'')+'</span></div><hr>'
+ +items.map(i=>'<div class="it"><span>'+i.name+' ×'+i.q+'</span><span>'+(i.q*i.price)+'</span></div>').join('')
+ +'<hr><div class="it"><span>المجموع</span><span>'+items.reduce((a,i)=>a+i.q*i.price,0)+'</span></div>'
+ +(o.discount?'<div class="it"><span>خصم</span><span>-'+o.discount+'</span></div>':'')
+ +'<div class="it"><span>شحن</span><span>'+(o.ship_fee||0)+'</span></div>'
+ +'<div class="it tot"><span>الإجمالي</span><span>'+o.total+'</span></div>'
+ +'<div class="c">شكراً لتسوقكم معنا 🌟</div>'
+ +'<p><button onclick="window.print()">طباعة</button></p></body></html>');
  w.document.close();
 };
 async function setStatus(id,st){
@@ -1040,6 +1066,22 @@ function notifyOrder(o){
 
 // backup
 $('#expBtn').onclick=()=>{const blob=new Blob([localStorage.getItem(KEY)||'{}'],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='varnoto-store-backup.json';a.click();};
+$('#expFull').onclick=async()=>{
+ try{
+  const h=await H();
+  const get=async u=>{const r=await fetch(SUPA_URL+'/rest/v1/'+u,{headers:h});return r.ok?await r.json():[];};
+  const dump={exported_at:new Date().toISOString(),
+   store:JSON.parse(localStorage.getItem(KEY)||'{}'),
+   orders:await get('orders?select=*&order=id'),
+   coupons:await get('coupons?select=*'),
+   reviews:await get('reviews?select=*&order=id&limit=500'),
+   subscribers:await get('subscribers?select=*&order=id'),
+   articles:await get('articles?select=*'),
+   zones:await get('shipping_zones?select=*'),
+   log:await get('change_log?select=*&order=id.desc&limit=200')};
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(dump)],{type:'application/json'}));a.download='varnoto-full-backup.json';a.click();
+ }catch(e){alert('تعذر النسخ الشامل');}
+};
 $('#impFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(r.result);save(o);logAction('استرجاع نسخة',{});location.reload();}catch(err){alert('ملف غير صالح');}};r.readAsText(f);};
 $('#resetBtn').onclick=()=>{if(confirm('متأكد؟ هيرجع كل حاجة للوضع الأصلي.')){localStorage.removeItem(KEY);location.reload();}};
 

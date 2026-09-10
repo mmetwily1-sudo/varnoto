@@ -261,6 +261,23 @@ drop policy if exists "varnoto orders staff read" on orders;
 create policy "varnoto orders staff read" on orders for select
   using ((auth.jwt()->'user_metadata'->>'role')='staff');
 
+-- my_orders supports optional order-id narrowing (privacy)
+drop function if exists my_orders(text);
+create or replace function my_orders(p_phone text, p_order int default null)
+returns jsonb language plpgsql security definer set search_path = public as $F$
+declare ph text;
+begin
+ ph := regexp_replace(coalesce(p_phone,''),'\D','','g');
+ if length(ph) < 8 then return '[]'::jsonb; end if;
+ return coalesce((select jsonb_agg(t order by t.id desc) from (
+   select id, created_at, items, total, discount, ship_fee, status, coupon_code
+   from orders
+   where regexp_replace(coalesce(customer_phone,''),'\D','','g') = ph
+     and (p_order is null or id = p_order)
+   order by id desc limit 20) t), '[]'::jsonb);
+end; $F$;
+grant execute on function my_orders(text,int) to anon, authenticated;
+
 -- 10) Pack-4: subscribers, articles, loyalty, funnel events
 create table if not exists subscribers (
   id bigint generated always as identity primary key,

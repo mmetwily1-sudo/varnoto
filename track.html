@@ -19,8 +19,9 @@
 <main class="page">
 <h1 data-en="Track your order" data-ar="تتبع طلبك">تتبع طلبك</h1>
 <p class="tiny" data-en="Enter the mobile number you ordered with." data-ar="اكتب رقم الموبايل اللي طلبت بيه.">اكتب رقم الموبايل اللي طلبت بيه.</p>
-<div style="display:flex;gap:8px;margin-top:12px">
-<input id="trPhone" dir="ltr" placeholder="01xxxxxxxxx" style="flex:1;padding:12px;border:1px solid var(--line);border-radius:12px;font-family:inherit">
+<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+<input id="trPhone" dir="ltr" placeholder="01xxxxxxxxx" style="flex:2;min-width:160px;padding:12px;border:1px solid var(--line);border-radius:12px;font-family:inherit">
+<input id="trId" dir="ltr" placeholder="# (optional)" style="flex:1;min-width:110px;padding:12px;border:1px solid var(--line);border-radius:12px;font-family:inherit">
 <button class="save" id="trBtn" style="background:#141414;color:#fff;border:none;border-radius:12px;padding:12px 26px;font-weight:800;cursor:pointer;font-family:inherit" data-en="Track" data-ar="تتبع">تتبع</button>
 </div>
 <p class="tiny" id="trMsg"></p>
@@ -39,7 +40,7 @@ $('#trBtn').onclick=async()=>{
  if(ph.replace(/\D/g,'').length<8){$('#trMsg').textContent=L==='ar'?'اكتب رقم موبايل صحيح':'Enter a valid number';return;}
  $('#trMsg').textContent=L==='ar'?'جاري البحث...':'Searching...';$('#trList').innerHTML='';
  try{
-  const r=await fetch(SUPA_URL+'/rest/v1/rpc/my_orders',{method:'POST',headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_phone:ph})});
+  const r=await fetch(SUPA_URL+'/rest/v1/rpc/my_orders',{method:'POST',headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_phone:ph,p_order:$('#trId').value.trim()==='' ? null:Number($('#trId').value)})});
   const rows=await r.json();
   if(!rows||!rows.length){$('#trMsg').textContent=L==='ar'?'مفيش طلبات بالرقم ده':'No orders for this number';return;}
   $('#trMsg').textContent='';
