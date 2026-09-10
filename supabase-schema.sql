@@ -261,6 +261,53 @@ drop policy if exists "varnoto orders staff read" on orders;
 create policy "varnoto orders staff read" on orders for select
   using ((auth.jwt()->'user_metadata'->>'role')='staff');
 
+-- 10) Pack-4: subscribers, articles, loyalty, funnel events
+create table if not exists subscribers (
+  id bigint generated always as identity primary key,
+  created_at timestamptz default now(),
+  email text unique not null,
+  source text default 'site'
+);
+alter table subscribers enable row level security;
+drop policy if exists "varnoto subs insert" on subscribers;
+create policy "varnoto subs insert" on subscribers for insert with check (email like '%@%.%');
+drop policy if exists "varnoto subs admin" on subscribers;
+create policy "varnoto subs admin" on subscribers for all
+  using ((auth.jwt()->'user_metadata'->>'role')='admin')
+  with check ((auth.jwt()->'user_metadata'->>'role')='admin');
+
+create table if not exists articles (
+  slug text primary key, title_ar text, title_en text,
+  body_ar text, body_en text, cover text,
+  published boolean default false, created_at timestamptz default now()
+);
+alter table articles enable row level security;
+drop policy if exists "varnoto articles public" on articles;
+create policy "varnoto articles public" on articles for select using (published = true);
+drop policy if exists "varnoto articles admin" on articles;
+create policy "varnoto articles admin" on articles for all
+  using ((auth.jwt()->'user_metadata'->>'role')='admin')
+  with check ((auth.jwt()->'user_metadata'->>'role')='admin');
+
+create table if not exists loyalty (
+  phone text primary key, points int default 0, updated_at timestamptz default now()
+);
+alter table loyalty enable row level security;
+drop policy if exists "varnoto loyalty admin" on loyalty;
+create policy "varnoto loyalty admin" on loyalty for all
+  using ((auth.jwt()->'user_metadata'->>'role')='admin')
+  with check ((auth.jwt()->'user_metadata'->>'role')='admin');
+
+create or replace function loyalty_balance(p_phone text)
+returns int language plpgsql security definer set search_path = public as $F$
+declare n int;
+begin
+ if p_phone is null or length(regexp_replace(p_phone,'\D','','g')) < 8 then return 0; end if;
+ select points into n from loyalty where phone = regexp_replace(p_phone,'\D','','g');
+ return coalesce(n,0);
+end; $F$;
+grant execute on function loyalty_balance(text) to anon, authenticated;
+
 -- 5) Visit tracking (public insert-only, admin read)
 create table if not exists events (
   id bigint generated always as identity primary key,

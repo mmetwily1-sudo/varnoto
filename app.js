@@ -114,6 +114,7 @@ function renderZonePay(){
     const methods=[{id:'cod',ar:'الدفع عند الاستلام',en:'Cash on delivery'}];
     if(pay.instapay&&pay.instapay.on) methods.push({id:'instapay',ar:'انستاباي'+(pay.instapay.number?' ('+pay.instapay.number+')':''),en:'InstaPay'+(pay.instapay.number?' ('+pay.instapay.number+')':'')});
     if(pay.vodafone&&pay.vodafone.on) methods.push({id:'vodafone',ar:'فودافون كاش'+(pay.vodafone.number?' ('+pay.vodafone.number+')':''),en:'Vodafone Cash'+(pay.vodafone.number?' ('+pay.vodafone.number+')':'')});
+    if(pay.paymob&&pay.paymob.on&&pay.paymob.iframe) methods.push({id:'paymob',ar:'💳 دفع أونلاين بالكارت',en:'💳 Pay online by card'});
     if(!methods.some(m=>m.id===PAY)) PAY='cod';
     pr.innerHTML=methods.map(m=>`<label style="display:block;margin:5px 0;font-size:14px"><input type="radio" name="paym" value="${m.id}" ${PAY===m.id?'checked':''}> ${LANG==='ar'?m.ar:m.en}</label>`).join('');
     pr.querySelectorAll('input[name=paym]').forEach(r=>r.onchange=()=>{PAY=r.value;renderCart();});
@@ -190,7 +191,7 @@ function addToCart(id){
   const p = findP(id); if(!p||!p.stock) return;
   const f = cart.find(x=>String(x.id)===String(id));
   if(f) f.q++; else cart.push({id:String(p.id),q:1});
-  saveCart(); openCart();
+  saveCart(); trackEv('cart_add'); openCart();
 }
 function renderCart(){
   const cc=$('#cartCount'); if(cc) cc.textContent = cart.reduce((a,b)=>a+b.q,0);
@@ -204,15 +205,24 @@ function renderCart(){
       <button onclick="rmItem('${p.id}')" style="border:none;background:none;cursor:pointer">🗑</button></div>`;
   }).join('');
   const total = cartSubtotal();
-  const sub=$('#cartSub'); if(sub) sub.textContent=total+' EGP';
   const disc=(COUPON&&COUPON.discount)||0;
+  renderCartTotals(total,disc,shipFee(),taxOf(total-disc));
+}
+function taxOf(sub){
+  let tx={}; try{tx=(getStore().tax)||{};}catch(e){}
+  if(!tx.on) return 0;
+  return Math.floor(sub*(tx.rate!=null?tx.rate:14)/100);
+}
+function renderCartTotals(total,disc,fee,tax){
+  const sub=$('#cartSub'); if(sub) sub.textContent=total+' EGP';
   const dr=$('#discRow'); if(dr) dr.style.display=disc>0?'flex':'none';
   const cd=$('#cartDisc'); if(cd) cd.textContent='-'+disc+' EGP';
-  const fee=shipFee();
   const fr=$('#feeRow'); if(fr) fr.style.display=(cart.length&&fee>0)?'flex':'none';
   const cf=$('#cartFee'); if(cf) cf.textContent='+'+fee+' EGP';
   const fs=$('#freeShip'); if(fs) fs.style.display=(cart.length&&fee===0)?'block':'none';
-  $('#cartTotal').textContent = (total-disc+fee) + ' EGP';
+  const tr=$('#taxRow'); if(tr) tr.style.display=(cart.length&&tax>0)?'flex':'none';
+  const ct=$('#cartTax'); if(ct) ct.textContent='+'+tax+' EGP';
+  $('#cartTotal').textContent = (total-disc+fee+tax) + ' EGP';
 }
 function cartSubtotal(){ return cart.reduce((a,r)=>{const p=findP(r.id);return a+(p?p.price*r.q:0);},0); }
 async function applyCoupon(){
@@ -299,6 +309,13 @@ function renderPromo(){
     el.innerHTML=`<b>${pr['text_'+LANG]||pr.text_ar||pr.text_en||''}</b> <span dir="ltr">${d}:${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}</span>`;
   };
   tick(); promoTimer=setInterval(tick,1000);
+}
+function trackEv(type){
+  try{
+    if(!supaOn()) return;
+    let sid=''; try{ sid=sessionStorage.getItem('vnt_sid')||('s'+Date.now().toString(36)+Math.floor(Math.random()*999)); sessionStorage.setItem('vnt_sid',sid); }catch(e){}
+    fetch(SUPABASE_URL+'/rest/v1/events',{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({type,page:location.pathname,session_id:sid})}).catch(()=>{});
+  }catch(e){}
 }
 function pingView(){
   try{
@@ -444,28 +461,64 @@ if($('#sortSel')) $('#sortSel').onchange=(e)=>{ SORT=e.target.value; renderProdu
 if($('#saleOnly')) $('#saleOnly').onchange=(e)=>{ SALEONLY=e.target.checked; renderProducts(); };
 $('#checkoutBtn').onclick = async ()=>{
   if(!cart.length) return alert(t('Cart is empty','السلة فاضية'));
+  trackEv('begin_checkout');
   const total = cartSubtotal();
   const items = cart.map(r=>{const p=findP(r.id);return {id:String(r.id),name:p?p.en:'',q:r.q,price:p?p.price:0};});
   const cname=($('#custName')&&$('#custName').value||'').trim();
   const cphone=($('#custPhone')&&$('#custPhone').value||'').trim();
-  let orderId=null, finalTotal=total, disc=0, fee=0;
+  const useLoy=$('#loyUse')&&$('#loyUse').checked;
+  let orderId=null, finalTotal=total, disc=0, fee=0, tax=0, ld=0;
   if(supaOn()){
     try{
-      const r=await fetch(SUPABASE_URL+'/rest/v1/rpc/place_order',{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_name:cname||null,p_phone:cphone||null,p_items:items,p_total:total,p_coupon:(COUPON&&COUPON.code)||null,p_zone:ZONE,p_pay:PAY})});
-      if(r.ok){const j=await r.json(); orderId=(j&&(typeof j==='number'?j:j.order_id))||null; disc=(j&&j.discount)||0; fee=(j&&j.ship_fee!=null)?j.ship_fee:shipFee(); finalTotal=(j&&j.total!=null)?j.total:(total-disc+fee);}
-    }catch(e){ fee=shipFee(); finalTotal=total-disc+fee; }
-  } else { fee=shipFee(); finalTotal=total-disc+fee; }
-  const payName=PAY==='cod'?(LANG==='ar'?'الدفع عند الاستلام':'Cash on delivery'):(PAY==='instapay'?(LANG==='ar'?'انستاباي':'InstaPay'):(LANG==='ar'?'فودافون كاش':'Vodafone Cash'));
+      const r=await fetch(SUPABASE_URL+'/rest/v1/rpc/place_order',{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_name:cname||null,p_phone:cphone||null,p_items:items,p_total:total,p_coupon:(COUPON&&COUPON.code)||null,p_zone:ZONE,p_pay:PAY,p_use_loyalty:!!useLoy})});
+      if(r.ok){const j=await r.json(); orderId=(j&&(typeof j==='number'?j:j.order_id))||null; disc=(j&&j.discount)||0; fee=(j&&j.ship_fee!=null)?j.ship_fee:shipFee(); tax=(j&&j.tax)||0; ld=(j&&j.loy_disc)||0; finalTotal=(j&&j.total!=null)?j.total:(total-disc+fee+tax-ld);}
+    }catch(e){ const f0=shipFee(); fee=f0; const t0=taxOf(total-disc); tax=t0; finalTotal=total-disc+f0+t0; }
+  } else { fee=shipFee(); tax=taxOf(total-disc); finalTotal=total-disc+fee+tax; }
+  const payName=PAY==='cod'?(LANG==='ar'?'الدفع عند الاستلام':'Cash on delivery'):(PAY==='instapay'?(LANG==='ar'?'انستاباي':'InstaPay'):(PAY==='vodafone'?(LANG==='ar'?'فودافون كاش':'Vodafone Cash'):(LANG==='ar'?'أونلاين':'Online')));
   let txt=(LANG==='ar'?'طلب جديد VARNOTO:':'New VARNOTO order:')+'\n'+items.map(i=>`${i.name} x${i.q}`).join('\n')+`\nSubtotal: ${total} EGP`;
   if(disc>0) txt+=`\nDiscount (${(COUPON&&COUPON.code)||''}): -${disc} EGP`;
   txt+=`\nShipping (${zoneOf().name_ar||zoneOf().name_en||''}): ${fee===0?(LANG==='ar'?'مجاني':'FREE'):fee+' EGP'}`;
+  if(tax>0) txt+=`\nTax: +${tax} EGP`;
+  if(ld>0) txt+=`\nLoyalty: -${ld} EGP`;
   txt+=`\nTotal: ${finalTotal} EGP`;txt+=`\nPay: ${payName}`;
   if(orderId) txt+='\nOrder #'+orderId;
   if(cname) txt+='\nName: '+cname;
   if(cphone) txt+='\nPhone: '+cphone;
   window.open((window.VARNOTO_WA||'https://wa.me/201000000000')+'?text='+encodeURIComponent(txt),'_blank');
-  if(orderId){ cart=[]; COUPON=null; const ci=$('#couponIn'); if(ci)ci.value=''; saveCart(); closeCart(); alert(t('Order #'+orderId+' received! We will call you to confirm.','طلبك #'+orderId+' وصل! هنتصل بيك للتأكيد.')); }
+  if(orderId){ cart=[]; COUPON=null; const ci=$('#couponIn'); if(ci)ci.value=''; saveCart(); closeCart(); refreshLoyalty(); alert(t('Order #'+orderId+' received! We will call you to confirm.','طلبك #'+orderId+' وصل! هنتصل بيك للتأكيد.')); }
+  if(orderId&&PAY==='paymob'){ payOnline(orderId,finalTotal); }
 };
-$('#newsForm').onsubmit = (e)=>{ e.preventDefault(); $('#newsMsg').textContent = t('Thanks! Check your email for 10% off.','شكراً! تابع إيميلك لخصم 10%.'); e.target.reset(); };
+async function payOnline(orderId,amount){
+  let pay={}; try{pay=(getStore().payment||{}).paymob||{};}catch(e){}
+  if(!pay.on||!pay.iframe_id){alert(t('الدفع الأونلاين غير مفعل بعد','Online payment is not enabled yet'));return;}
+  try{
+    const r=await fetch(SUPABASE_URL+'/functions/v1/paymob-intent',{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({order_id:orderId,amount_cents:Math.round(amount*100)})});
+    const j=await r.json();
+    if(j&&j.iframe_url){window.open(j.iframe_url,'_blank');}
+    else alert(t('تعذر بدء الدفع','Could not start payment'));
+  }catch(e){alert(t('تعذر بدء الدفع','Could not start payment'));}
+}
+async function refreshLoyalty(){
+  const box=$('#loyBox'); if(!box) return; box.style.display='none';
+  let on=false; try{on=!!((getStore().loyalty||{}).on);}catch(e){}
+  if(!on||!supaOn()) return;
+  const ph=($('#custPhone')&&$('#custPhone').value||'').replace(/\D/g,'');
+  if(ph.length<8) return;
+  try{
+    const r=await fetch(SUPABASE_URL+'/rest/v1/rpc/loyalty_balance',{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_phone:ph})});
+    const pts=await r.json();
+    if(pts>0){box.style.display='';$('#loyPts').textContent=pts;
+      const cfg=(getStore().loyalty||{});const val=cfg.value!=null?cfg.value:1, min=cfg.min!=null?cfg.min:50;
+      $('#loyHint').textContent=t('نقاطك = '+(pts*val)+' جنيه خصم (الأدنى '+min+')','Your points = '+(pts*val)+' EGP off (min '+min+')');}
+  }catch(e){}
+}
+$('#newsForm').onsubmit = async (e)=>{
+  e.preventDefault();
+  const em=$('#newsEmail').value.trim();
+  if(supaOn()&&em){
+    try{await fetch(SUPABASE_URL+'/rest/v1/subscribers',{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({email:em,source:'site'})});}catch(err){}
+  }
+  $('#newsMsg').textContent = t('Thanks! Check your email for 10% off.','شكراً! تابع إيميلك لخصم 10%.'); e.target.reset();
+};
 
 setLang('ar');

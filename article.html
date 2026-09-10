@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="aTitle">VARNOTO Blog</title>
+<meta name="description" id="aDesc" content="VARNOTO blog">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="stylesheet" href="style.css?v=2">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>.page{max-width:760px;margin:0 auto;padding:40px 18px 60px}.page img.cover{width:100%;border-radius:16px;margin:14px 0}.page p{line-height:2.1;color:#333;margin-bottom:14px}</style>
+</head>
+<body>
+<div class="announce" id="announce">شحن مجاني للطلبات فوق 1999 جنيه 🚚</div>
+<header class="header"><div class="container header-in">
+<a class="logo" href="index.html"><img src="assets/logo.svg" alt="VARNOTO"></a>
+<div class="actions"><button class="lang-btn" id="langBtn">EN</button></div>
+</div></header>
+<main class="page" id="artMain"><p class="tiny">جاري التحميل...</p></main>
+<footer class="footer"><div class="copy">© 2026 VARNOTO — varnoto.com</div></footer>
+<script>
+const SUPA_URL='https://xgokhpdhzafuluiqdtah.supabase.co', SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnb2tocGRoemFmdWx1aXFkdGFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5NjU0NDMsImV4cCI6MjEwNDU0MTQ0M30.2B-0GPvxh5KoXVM4jhN06hCt75LakazSC36bh637zQA';
+let L='ar';const $=s=>document.querySelector(s);
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+$('#langBtn').onclick=()=>{L=L==='ar'?'en':'ar';document.documentElement.lang=L;document.documentElement.dir=L==='ar'?'rtl':'ltr';$('#langBtn').textContent=L==='ar'?'EN':'عربي';load();};
+async function load(){
+ const slug=new URLSearchParams(location.search).get('slug');
+ try{
+  const r=await fetch(SUPA_URL+'/rest/v1/articles?slug=eq.'+encodeURIComponent(slug)+'&published=eq.true&select=*',{headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY}});
+  const j=await r.json();const a=j&&j[0];
+  if(!a){$('#artMain').innerHTML='<p>غير موجود</p>';return;}
+  const t=L==='ar'?(a.title_ar||a.title_en):(a.title_en||a.title_ar);
+  const b=L==='ar'?(a.body_ar||a.body_en||''):(a.body_en||a.body_ar||'');
+  document.title=t+' | VARNOTO';
+  $('#aDesc').setAttribute('content',b.slice(0,150));
+  $('#artMain').innerHTML=`<h1>${esc(t)}</h1><p class="tiny">${new Date(a.created_at).toLocaleDateString('ar-EG')}</p>`
+   +(a.cover?`<img class="cover" src="${a.cover}" alt="">`:'')
+   +b.split(/\n\s*\n/).map(p=>'<p>'+esc(p).replace(/\n/g,'<br>')+'</p>').join('')
+   +`<a class="back link" href="articles.html">${L==='ar'?'→ كل المقالات':'← All articles'}</a> <a class="back link" href="index.html">${L==='ar'?'→ المتجر':'← Store'}</a>`;
+  const ld={'@context':'https://schema.org','@type':'Article',headline:t,image:a.cover||undefined,author:{'@type':'Organization',name:'VARNOTO'},publisher:{'@type':'Organization',name:'VARNOTO'},datePublished:a.created_at};
+  const sc=document.createElement('script');sc.type='application/ld+json';sc.textContent=JSON.stringify(ld);document.head.appendChild(sc);
+ }catch(e){$('#artMain').innerHTML='<p>تعذر التحميل</p>';}
+}
+load();
+</script>
+</body>
+</html>

@@ -94,6 +94,8 @@ td input[type=text],td input[type=number],td select{width:100%;padding:7px 9px;b
 <button class="tab" data-t="pReviews">⭐ التقييمات <span class="bdg" id="revBdg" style="display:none">0</span></button>
 <button class="tab" data-t="pShip">🚚 الشحن والدفع</button>
 <button class="tab" data-t="pStaff">👥 الطاقم</button>
+<button class="tab" data-t="pCust">🧑 العملاء</button>
+<button class="tab" data-t="pArts">✍️ المقالات</button>
 <button class="tab" data-t="pSections">🗂 الأقسام</button>
 <button class="tab" data-t="pTheme">🎨 الثيم والواجهة</button>
 <button class="tab" data-t="pHF">🧱 الهيدر والفوتر</button>
@@ -181,6 +183,23 @@ td input[type=text],td input[type=number],td select{width:100%;padding:7px 9px;b
 <div class="field"><label><input type="checkbox" id="pay_vod"> فودافون كاش</label><input id="pay_vod_n" type="text" dir="ltr" placeholder="رقم فودافون كاش"></div>
 </div>
 <div class="btnrow"><button class="save" id="savePay">💾 حفظ الدفع</button><span class="okmsg" id="msgPay"></span></div>
+<h3 style="margin-top:20px">💳 الدفع الأونلاين (Paymob)</h3>
+<p class="tiny">الحالة: الدالة السحابية <b>paymob-intent</b> منشورة ✅ — فاضل مفاتيح حساب Paymob (ابعتها في الشات وهركبها سيرفر-side).</p>
+<div class="field"><label><input type="checkbox" id="pay_pm"> إظهار خيار "ادفع أونلاين بالكارت"</label></div>
+<h3 style="margin-top:20px">⭐ نقاط الولاء</h3>
+<div class="row3">
+<div class="field"><label><input type="checkbox" id="ly_on"> تفعيل الولاء</label></div>
+<div class="field"><label>كل كم جنيه = نقطة؟</label><input id="ly_per" type="number" min="1" value="100"></div>
+<div class="field"><label>النقطة = كم جنيه؟</label><input id="ly_val" type="number" min="1" value="1"></div>
+</div>
+<div class="field"><label>أقل نقاط للاستبدال</label><input id="ly_min" type="number" min="1" value="50"></div>
+<h3 style="margin-top:20px">🧾 الضريبة</h3>
+<div class="row3">
+<div class="field"><label><input type="checkbox" id="tx_on"> تفعيل ضريبة</label></div>
+<div class="field"><label>النسبة %</label><input id="tx_rate" type="number" min="0" value="14"></div>
+<div class="field"><label>رقم التسجيل الضريبي</label><input id="tx_vat" type="text" dir="ltr"></div>
+</div>
+<div class="btnrow"><button class="save" id="saveExtra">💾 حفظ الولاء والضريبة</button><span class="okmsg" id="msgEx"></span></div>
 </div>
 
 <div class="panel" id="pStaff">
@@ -195,6 +214,36 @@ td input[type=text],td input[type=number],td select{width:100%;padding:7px 9px;b
 <tr><td><b>مدير (admin)</b></td><td>✅ كامل</td><td>✅ كامل</td><td>✅</td></tr>
 <tr><td><b>طاقم (staff)</b></td><td>عرض + تغيير الحالة</td><td>❌</td><td>✅ عرض</td></tr>
 </tbody></table>
+</div>
+
+<div class="panel" id="pCust">
+<div class="row2">
+<div><h3>🧑 العملاء (من الطلبات)</h3>
+<div class="field"><label>بحث برقم الموبايل</label><div style="display:flex;gap:8px"><input id="cu_q" type="text" dir="ltr" placeholder="01xxxxxxxxx"><button class="ghostb" id="cuBtn">بحث</button></div></div>
+<div id="cuRes"></div></div>
+<div><h3>📧 المشتركون <span class="tiny" id="subCount"></span></h3>
+<div class="btnrow" style="margin-top:0"><button class="ghostb" id="subCsv">⬇️ تصدير CSV</button></div>
+<table style="margin-top:10px"><thead><tr><th>الإيميل</th><th>التاريخ</th><th></th></tr></thead><tbody id="subRows"></tbody></table></div>
+</div>
+</div>
+
+<div class="panel" id="pArts">
+<div class="btnrow" style="margin-top:0;margin-bottom:14px"><button class="save" id="addArtBtn">＋ مقال جديد</button></div>
+<table><thead><tr><th>slug</th><th>العنوان</th><th>منشور؟</th><th></th></tr></thead><tbody id="artRows"></tbody></table>
+<div id="artEd" style="display:none;margin-top:16px;border-top:1px solid var(--line);padding-top:16px">
+<div class="row2">
+<div class="field"><label>slug (EN, بدون مسافات)</label><input id="a_slug" type="text" dir="ltr"></div>
+<div class="field"><label>صورة الغلاف (رابط)</label><input id="a_cover" type="text" dir="ltr"></div>
+</div>
+<div class="row2">
+<div class="field"><label>العنوان (عربي)</label><input id="a_tar" type="text"></div>
+<div class="field"><label>Title (English)</label><input id="a_ten" type="text" dir="ltr"></div>
+</div>
+<div class="field"><label>المحتوى (عربي) — سطر فارغ = فقرة</label><textarea id="a_bar" style="min-height:140px"></textarea></div>
+<div class="field"><label>Content (English)</label><textarea id="a_ben" dir="ltr" style="min-height:140px"></textarea></div>
+<div class="field"><label><input type="checkbox" id="a_pub"> منشور ✅</label></div>
+<div class="btnrow"><button class="save" id="artSave">💾 حفظ المقال</button><span class="okmsg" id="msgArt"></span></div>
+</div>
 </div>
 
 <div class="panel" id="pProducts">
@@ -428,7 +477,7 @@ async function enterDash(email){
     setSync('👤 وضع طاقم — عرض الطلبات وتغيير حالتها فقط');
    }}
  }catch(e){}
- syncFromCloud();loadHome();loadOrders();loadLog();subscribeOrders();loadZonesAdmin();ntFill();
+ syncFromCloud();loadHome();loadOrders();loadLog();subscribeOrders();loadZonesAdmin();ntFill();loadSubs();loadArts();
  if('Notification' in window&&Notification.permission==='default'){try{Notification.requestPermission();}catch(e){}}
 }
 let ROLE='admin';
@@ -461,7 +510,7 @@ $('#chPwBtn').onclick=async()=>{
   if(r.error){alert('فشل التغيير');}else{$('#npw').value='';alert('✅ اتغيرت كلمة السر');}
  }catch(e){alert('تعذر الاتصال');}
 };
-document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===b.dataset.t));if(b.dataset.t==='pLog')loadLog();if(b.dataset.t==='pOrders')loadOrders();if(b.dataset.t==='pCoupons')loadCoupons();if(b.dataset.t==='pReviews')loadReviews();if(b.dataset.t==='pHome')loadHome();if(b.dataset.t==='pShip')loadZonesAdmin();});
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===b.dataset.t));if(b.dataset.t==='pLog')loadLog();if(b.dataset.t==='pOrders')loadOrders();if(b.dataset.t==='pCoupons')loadCoupons();if(b.dataset.t==='pReviews')loadReviews();if(b.dataset.t==='pHome')loadHome();if(b.dataset.t==='pShip'){loadZonesAdmin();fillPayExtra();}if(b.dataset.t==='pStaff')return;if(b.dataset.t==='pCust'){loadSubs();}if(b.dataset.t==='pArts')loadArts();});
 
 // products
 function renderRows(){
@@ -893,9 +942,83 @@ $('#saveZones').onclick=async()=>{
 };
 $('#savePay').onclick=()=>{
  const s=load();
- s.payment={cod:{on:$('#pay_cod').checked},instapay:{on:$('#pay_ins').checked,number:$('#pay_ins_n').value.trim()},vodafone:{on:$('#pay_vod').checked,number:$('#pay_vod_n').value.trim()}};
+ s.payment={cod:{on:$('#pay_cod').checked},instapay:{on:$('#pay_ins').checked,number:$('#pay_ins_n').value.trim()},vodafone:{on:$('#pay_vod').checked,number:$('#pay_vod_n').value.trim()},paymob:{on:$('#pay_pm').checked}};
  save(s);logAction('تعديل طرق الدفع',{});
  $('#msgPay').textContent='✅ اتحفظ';setTimeout(()=>$('#msgPay').textContent='',2500);
+};
+function fillPayExtra(){
+ const s=load(),pay=s.payment||{};
+ $('#pay_pm').checked=!!(pay.paymob&&pay.paymob.on);
+ const ly=s.loyalty||{};
+ $('#ly_on').checked=!!ly.on;$('#ly_per').value=ly.earn_per!=null?ly.earn_per:100;
+ $('#ly_val').value=ly.value!=null?ly.value:1;$('#ly_min').value=ly.min!=null?ly.min:50;
+ const tx=s.tax||{};
+ $('#tx_on').checked=!!tx.on;$('#tx_rate').value=tx.rate!=null?tx.rate:14;$('#tx_vat').value=tx.vat||'';
+}
+$('#saveExtra').onclick=()=>{
+ const s=load();
+ s.loyalty={on:$('#ly_on').checked,earn_per:Number($('#ly_per').value||100),value:Number($('#ly_val').value||1),min:Number($('#ly_min').value||50)};
+ s.tax={on:$('#tx_on').checked,rate:Number($('#tx_rate').value||14),vat:$('#tx_vat').value.trim()};
+ save(s);logAction('تعديل الولاء والضريبة',{});
+ $('#msgEx').textContent='✅ اتحفظ';setTimeout(()=>$('#msgEx').textContent='',2500);
+};
+
+// customers + subscribers
+$('#cuBtn').onclick=async()=>{
+ const q=$('#cu_q').value.replace(/\D/g,'');
+ if(q.length<8){$('#cuRes').innerHTML='<p class="tiny">اكتب رقم صحيح</p>';return;}
+ $('#cuRes').innerHTML='<p class="tiny">جاري البحث...</p>';
+ try{
+  const h=await H();
+  const r=await fetch(SUPA_URL+'/rest/v1/orders?select=id,created_at,items,total,status&order=created_at.desc&limit=50',{headers:h});
+  const rows=await r.json();
+  const mine=(rows||[]).filter(o=>String(o.customer_phone||'').replace(/\D/g,'')===q);
+  let pts=0;try{const pr=await fetch(SUPA_URL+'/rest/v1/loyalty?phone=eq.'+q+'&select=points',{headers:h});const pj=await pr.json();pts=(pj&&pj[0]&&pj[0].points)||0;}catch(e){}
+  $('#cuRes').innerHTML=mine.length?`<p><b>${mine.length}</b> طلبات • ⭐ <b>${pts}</b> نقطة • <a class="link" target="_blank" href="https://wa.me/2${q}">واتساب 💬</a></p>`+mine.map(o=>`<div style="border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin-top:8px;font-size:13px"><b>#${o.id}</b> — ${o.total} EGP — ${o.status} <span class="tiny">${fmtDate(o.created_at)}</span><br>${itemsTxt(o.items)}</div>`).join(''):'<p class="tiny">مفيش طلبات بالرقم ده</p>';
+ }catch(e){$('#cuRes').innerHTML='<p class="tiny">تعذر البحث</p>';}
+};
+async function loadSubs(){
+ if(LOCAL_MODE)return;
+ try{
+  const h=await H();
+  const r=await fetch(SUPA_URL+'/rest/v1/subscribers?select=*&order=created_at.desc&limit=200',{headers:h});
+  if(!r.ok)return;
+  const rows=await r.json();
+  $('#subCount').textContent='('+rows.length+')';
+  window._subs=rows;
+  $('#subRows').innerHTML=rows.length?rows.map(s=>`<tr><td dir="ltr">${s.email}</td><td class="tiny">${fmtDate(s.created_at)}</td><td><button class="del" onclick="delSub(${s.id})">🗑</button></td></tr>`).join(''):'<tr><td colspan="3" class="tiny">لا مشتركين بعد</td></tr>';
+ }catch(e){}
+}
+window.delSub=async id=>{if(!confirm('تحذف المشترك؟'))return;try{const h=await H();await fetch(SUPA_URL+'/rest/v1/subscribers?id=eq.'+id,{method:'DELETE',headers:h});loadSubs();}catch(e){}};
+$('#subCsv').onclick=()=>{const rows=window._subs||[];const csv='email,created_at\n'+rows.map(s=>'"'+(s.email||'')+'","'+(s.created_at||'')+'"').join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='subscribers.csv';a.click();};
+
+// articles
+async function loadArts(){
+ if(LOCAL_MODE)return;
+ try{
+  const h=await H();
+  const r=await fetch(SUPA_URL+'/rest/v1/articles?select=slug,title_ar,published&order=created_at.desc',{headers:h});
+  if(!r.ok)return;
+  const rows=await r.json();
+  $('#artRows').innerHTML=rows.length?rows.map(a=>`<tr><td dir="ltr">${a.slug}</td><td>${a.title_ar||''}</td><td>${a.published?'✅':'—'}</td><td style="white-space:nowrap"><button class="ghostb" style="padding:6px 12px" onclick="editArt('${a.slug}')">✏️</button> <button class="del" onclick="delArt('${a.slug}')">🗑</button> <a class="ghostb" style="padding:6px 12px;text-decoration:none" target="_blank" href="article.html?slug=${a.slug}">👁</a></td></tr>`).join(''):'<tr><td colspan="4" class="tiny">لا مقالات — ضيف أول مقال.</td></tr>';
+ }catch(e){}
+}
+$('#addArtBtn').onclick=()=>{['a_slug','a_cover','a_tar','a_ten','a_bar','a_ben'].forEach(id=>$('#'+id).value='');$('#a_pub').checked=false;$('#artEd').style.display='block';window.scrollTo(0,document.body.scrollHeight);};
+window.editArt=async slug=>{
+ try{const h=await H();const r=await fetch(SUPA_URL+'/rest/v1/articles?slug=eq.'+encodeURIComponent(slug)+'&select=*',{headers:h});const j=await r.json();const a=j&&j[0];if(!a)return;
+ $('#a_slug').value=a.slug;$('#a_cover').value=a.cover||'';$('#a_tar').value=a.title_ar||'';$('#a_ten').value=a.title_en||'';$('#a_bar').value=a.body_ar||'';$('#a_ben').value=a.body_en||'';$('#a_pub').checked=!!a.published;
+ $('#artEd').style.display='block';}catch(e){}
+};
+window.delArt=async slug=>{if(!confirm('تحذف المقال؟'))return;try{const h=await H();await fetch(SUPA_URL+'/rest/v1/articles?slug=eq.'+encodeURIComponent(slug),{method:'DELETE',headers:h});logAction('حذف مقال',{slug});loadArts();}catch(e){}};
+$('#artSave').onclick=async()=>{
+ const slug=$('#a_slug').value.trim().toLowerCase().replace(/\s+/g,'-');
+ if(!slug){alert('اكتب الـ slug');return;}
+ const body={slug,cover:$('#a_cover').value.trim()||null,title_ar:$('#a_tar').value,title_en:$('#a_ten').value,body_ar:$('#a_bar').value,body_en:$('#a_ben').value,published:$('#a_pub').checked};
+ try{
+  const h=await H();h['Content-Type']='application/json';
+  await fetch(SUPA_URL+'/rest/v1/articles?on_conflict=slug',{method:'POST',headers:Object.assign(h,{Prefer:'resolution=merge-duplicates,return=minimal'}),body:JSON.stringify(body)});
+  logAction('حفظ مقال',{slug});loadArts();$('#msgArt').textContent='✅ اتحفظ';setTimeout(()=>$('#msgArt').textContent='',2500);
+ }catch(e){alert('تعذر الحفظ');}
 };
 
 // whatsapp notify (per-device settings, secrets never touch the cloud)
@@ -920,7 +1043,7 @@ $('#expBtn').onclick=()=>{const blob=new Blob([localStorage.getItem(KEY)||'{}'],
 $('#impFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(r.result);save(o);logAction('استرجاع نسخة',{});location.reload();}catch(err){alert('ملف غير صالح');}};r.readAsText(f);};
 $('#resetBtn').onclick=()=>{if(confirm('متأكد؟ هيرجع كل حاجة للوضع الأصلي.')){localStorage.removeItem(KEY);location.reload();}};
 
-function fillAll(){renderRows();renderSecs();renderStockAlerts();fillTheme();fillHF();fillPg();fillSEO();fillC();}
+function fillAll(){renderRows();renderSecs();renderStockAlerts();fillTheme();fillHF();fillPg();fillSEO();fillC();fillPayExtra();}
 fillAll();
 </script>
 </body>

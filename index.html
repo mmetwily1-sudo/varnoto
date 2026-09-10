@@ -153,7 +153,12 @@
   <div class="cart-foot">
     <div class="cust">
       <input id="custName" type="text" data-en-ph="Your name (optional)" data-ar-ph="اسمك (اختياري)" placeholder="اسمك (اختياري)">
-      <input id="custPhone" type="tel" dir="ltr" placeholder="01xxxxxxxxx">
+      <input id="custPhone" type="tel" dir="ltr" placeholder="01xxxxxxxxx" oninput="refreshLoyalty()">
+      <div id="loyBox" style="display:none;background:#fff8e6;border:1px solid #e0a100;border-radius:10px;padding:8px 12px;font-size:13px">
+        ⭐ <span data-en="Your points:" data-ar="نقاطك:">نقاطك:</span> <b id="loyPts">0</b>
+        <span class="tiny" id="loyHint"></span>
+        <label style="display:block;margin-top:4px"><input type="checkbox" id="loyUse"> <span data-en="Use my points" data-ar="استخدم نقاطي">استخدم نقاطي</span></label>
+      </div>
     </div>
     <div class="coupon"><input id="couponIn" type="text" dir="ltr" placeholder="كود الخصم"><button id="couponBtn" type="button" data-en="Apply" data-ar="تطبيق">تطبيق</button></div>
     <p class="tiny" id="couponMsg" style="margin-top:0"></p>
@@ -162,6 +167,7 @@
     <div class="field" style="margin:8px 0"><label class="tiny" style="display:block;margin-bottom:4px" data-en="Delivery zone" data-ar="منطقة التوصيل">منطقة التوصيل</label><select id="zoneSel" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;font-family:inherit"></select></div>
     <div id="payRow" style="margin-bottom:8px"></div>
     <div class="total" id="feeRow"><span data-en="Shipping" data-ar="الشحن">الشحن</span><b id="cartFee">0 EGP</b></div>
+    <div class="total" id="taxRow" style="display:none"><span data-en="Tax" data-ar="الضريبة">الضريبة</span><b id="cartTax">0 EGP</b></div>
     <p class="tiny" id="freeShip" style="display:none;color:#1c7a3d;font-weight:700" data-en="🎉 Your order ships FREE" data-ar="🎉 طلبك هيتشحن مجاناً">🎉 طلبك هيتشحن مجاناً</p>
     <div class="total"><span data-en="Total" data-ar="الإجمالي">الإجمالي</span><b id="cartTotal">0 EGP</b></div>
     <p class="tiny" data-en="Free shipping over 1999 EGP • COD available" data-ar="شحن مجاني فوق 1999 جنيه • دفع عند الاستلام">شحن مجاني فوق 1999 جنيه • دفع عند الاستلام</p>
