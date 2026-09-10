@@ -70,7 +70,7 @@ td input[type=text],td input[type=number],td select{width:100%;padding:7px 9px;b
 </div></header>
 
 <div id="gate">
-<div id="errbox" style="display:none;background:#fdecea;border:1px solid #b3261e;border-radius:12px;padding:12px;margin-bottom:14px;text-align:start"><b>⚠ خطأ تقني (انسخه وابعته):</b><pre id="errtxt" dir="ltr" style="white-space:pre-wrap;font-size:12px"></pre></div>
+<div id="errbox" style="display:none;position:fixed;top:70px;right:12px;left:12px;z-index:999;background:#fdecea;border:2px solid #b3261e;border-radius:12px;padding:12px;max-width:720px;margin:0 auto"><b>⚠ خطأ تقني (انسخه وابعته):</b><pre id="errtxt" dir="ltr" style="white-space:pre-wrap;font-size:12px;max-height:120px;overflow:auto"></pre></div>
 <noscript><p style="color:#b3261e;font-weight:800">فعّل JavaScript عشان الداشبورد تشتغل.</p></noscript>
 <h2>🔐 دخول الإدارة</h2>
 <p class="tiny" id="gateUser">حساب المدير فقط</p>
@@ -501,7 +501,17 @@ let SB=null, LOCAL_MODE=false, EDIT_ID=null;
 function sb(){ if(!SB&&window.supabase&&supaOn()) SB=window.supabase.createClient(SUPA_URL,SUPA_KEY); return SB; }
 async function H(){ try{ const c=sb(); if(c){ const r=await c.auth.getSession(); const t=r.data&&r.data.session&&r.data.session.access_token; if(t) return {apikey:SUPA_KEY,Authorization:'Bearer '+t}; } }catch(e){} return {apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY}; }
 function setSync(t){const e=$('#syncState');if(e)e.textContent=t;}
-function load(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return{};}}
+function showErr(t){try{const b=$('#errbox');if(b){b.style.display='block';const x=$('#errtxt');if(x)x.textContent+=('\n• '+t);}}catch(e){}}
+function load(){
+ try{
+  const s=JSON.parse(localStorage.getItem(KEY))||{};
+  // self-repair: drop malformed sections, keep a backup
+  let fixed=false;
+  ['products','sections'].forEach(k=>{ if(s[k]!==undefined&&!Array.isArray(s[k])){ s[k]=undefined; fixed=true; } });
+  if(fixed){ try{localStorage.setItem(KEY+'.bak',localStorage.getItem(KEY)||'');localStorage.setItem(KEY,JSON.stringify(s));}catch(e){} }
+  return s;
+ }catch(e){return{};}
+}
 function save(s){localStorage.setItem(KEY,JSON.stringify(s));pushRemote(s);}
 async function pushRemote(s){
  if(LOCAL_MODE){setSync('💾 حفظ محلي (وضع الطوارئ)');return;}
@@ -537,7 +547,7 @@ async function logAction(action,details){
 function merged(){const s=load();const byId={};(s.products||[]).forEach(o=>{if(o&&o.id!=null)byId[String(o.id)]=o;});return DEFAULTS.map(d=>Object.assign({},d,byId[String(d.id)]||{}));}
 function allProducts(){const base=merged();const s=load();const known=new Set(base.map(p=>String(p.id)));(s.products||[]).forEach(o=>{if(o&&o.id!=null&&!known.has(String(o.id)))base.push(Object.assign({cat:'tshirt',en:'',ar:'',price:0,old:'',stock:true,qty:0,weight:'',desc_en:'',desc_ar:'',seo_title:'',seo_desc:'',imgs:[]},o));});return base;}
 function getSecs(){const s=load();if(Array.isArray(s.sections)&&s.sections.length)return s.sections;return DEFAULT_SECS.map(x=>Object.assign({},x));}
-function fillAll(){renderRows();fillTheme();fillHF();fillPg();fillSEO();fillC();}
+
 
 // gate
 async function enterDash(email){
@@ -1426,7 +1436,10 @@ $('#expFull').onclick=async()=>{
 $('#impFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(r.result);save(o);logAction('استرجاع نسخة',{});location.reload();}catch(err){alert('ملف غير صالح');}};r.readAsText(f);};
 $('#resetBtn').onclick=()=>{if(confirm('متأكد؟ هيرجع كل حاجة للوضع الأصلي.')){localStorage.removeItem(KEY);location.reload();}};
 
-function fillAll(){renderRows();renderSecs();renderStockAlerts();fillTheme();fillHF();fillPg();fillSEO();fillC();fillPayExtra();}
+function fillAll(){
+ const steps=[['products',renderRows],['sections',renderSecs],['stock',renderStockAlerts],['theme',fillTheme],['header/footer',fillHF],['pages',fillPg],['seo',fillSEO],['contact',fillC],['pay-extra',fillPayExtra]];
+ steps.forEach(([name,fn])=>{ try{fn();}catch(e){showErr(name+': '+(e&&e.message||e));} });
+}
 fillAll();
 </script>
 </body>
