@@ -1,5 +1,14 @@
 
-const KEY='varnoto_store_v1', EMERGENCY_PIN='2026';
+const KEY='varnoto_store_v1', EMERGENCY_PIN='2026', ADMIN_BUILD='20260910c';
+function selfTest(){
+ try{
+  const tabs=document.querySelectorAll('.tab').length;
+  const panels=document.querySelectorAll('.panel').length;
+  const rows=document.querySelectorAll('#prodRows tr').length;
+  const tag=document.getElementById('buildTag');
+  if(tag) tag.textContent='build '+ADMIN_BUILD+' • tabs:'+tabs+' • panels:'+panels+' • products:'+rows;
+ }catch(e){}
+}
 try{
  if(/(?:\?|&)reset=1(?:&|$)/.test(location.search)){
   try{localStorage.removeItem(KEY);}catch(e){}
@@ -977,5 +986,7 @@ $('#resetBtn').onclick=()=>{if(confirm('متأكد؟ هيرجع كل حاجة ل
 function fillAll(){
  const steps=[['products',renderRows],['sections',renderSecs],['stock',renderStockAlerts],['theme',fillTheme],['header/footer',fillHF],['pages',fillPg],['seo',fillSEO],['contact',fillC],['pay-extra',fillPayExtra]];
  steps.forEach(([name,fn])=>{ try{fn();}catch(e){showErr(name+': '+(e&&e.message||e));} });
+ selfTest();
+}
 }
 fillAll();
