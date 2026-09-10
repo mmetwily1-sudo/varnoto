@@ -332,6 +332,8 @@ td input[type=text],td input[type=number],td select{width:100%;padding:7px 9px;b
 <div class="field"><label>Meta Pixel ID</label><input id="seo_meta" type="text" dir="ltr" placeholder="1234567890"></div>
 <div class="field"><label>TikTok Pixel ID</label><input id="seo_tt" type="text" dir="ltr" placeholder="ABCDEFGHIJ1234567890"></div>
 <div class="field"><label>Google Analytics 4 ID</label><input id="seo_ga" type="text" dir="ltr" placeholder="G-XXXXXXXXXX"></div>
+<div class="field"><label>Google Tag Manager ID (مثال: GTM-XXXXXXX)</label><input id="seo_gtm" type="text" dir="ltr" placeholder="GTM-XXXXXXX"></div>
+<div class="field"><label>Google Search Console — كود التحقق (content فقط)</label><input id="seo_gv" type="text" dir="ltr" placeholder="abcdefgh..."></div>
 <p class="tiny">تحسينات المنتجات (العنوان والوصف لكل منتج) من زر ✏️ بجانب كل منتج في تبويب المنتجات — وتظهر في كروت البحث وبيانات المنتج المنظمة (JSON-LD).</p>
 <div class="btnrow"><button class="save" id="saveSEO">💾 حفظ SEO</button><span class="okmsg" id="msgSEO"></span></div>
 </div>
@@ -732,10 +734,11 @@ function fillSEO(){
  $('#seo_og').value=seo.og_image||'assets/hero.jpg';
  const ig=s.integrations||{};
  $('#seo_meta').value=ig.meta||'';$('#seo_tt').value=ig.tiktok||'';$('#seo_ga').value=ig.ga4||'';
+ $('#seo_gtm').value=ig.gtm||'';$('#seo_gv').value=(s.seo&&s.seo.google_verification)||'';
 }
 $('#saveSEO').onclick=()=>{
- const s=load();s.seo={site_title:$('#seo_t').value.trim(),site_desc:$('#seo_d').value.trim(),og_image:$('#seo_og').value.trim()};
- s.integrations={meta:$('#seo_meta').value.trim(),tiktok:$('#seo_tt').value.trim(),ga4:$('#seo_ga').value.trim()};
+ const s=load();s.seo={site_title:$('#seo_t').value.trim(),site_desc:$('#seo_d').value.trim(),og_image:$('#seo_og').value.trim(),google_verification:$('#seo_gv').value.trim()};
+ s.integrations={meta:$('#seo_meta').value.trim(),tiktok:$('#seo_tt').value.trim(),ga4:$('#seo_ga').value.trim(),gtm:$('#seo_gtm').value.trim()};
  save(s);logAction('تعديل SEO والتكاملات',{});
  $('#msgSEO').textContent='✅ اتحفظ';setTimeout(()=>$('#msgSEO').textContent='',2500);
 };

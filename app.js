@@ -264,6 +264,7 @@ window.quick = (id)=>{
   if(p.weight) meta.push(t('Weight: '+p.weight,'الوزن: '+p.weight));
   const mm=$('#mMeta'); if(mm) mm.textContent=meta.join(' • ');
   $('#mAdd').onclick = ()=>{ addToCart(p.id); closeModal(); };
+  pxEvent('ViewItem',{id:String(p.id),name:p.en,price:p.price});
   $('#mAdd').disabled = !p.stock;
   $('#mAdd').textContent = !p.stock ? t('Sold out','نفد المخزون') : t('Add to cart','ضيف للسلة');
   $('#quickModal').classList.add('show');
@@ -291,7 +292,14 @@ function pxEvent(name,params){
   params=params||{};
   try{if(window.fbq)fbq('track',name,params);}catch(e){}
   try{if(window.ttq)ttq.track(name,params);}catch(e){}
-  try{if(window.gtag)gtag('event',name==='Purchase'?'purchase':(name==='AddToCart'?'add_to_cart':name),params);}catch(e){}
+  try{if(window.gtag)gtag('event',name==='Purchase'?'purchase':(name==='AddToCart'?'add_to_cart':(name==='ViewItem'?'view_item':name)),params);}catch(e){}
+  try{
+    window.dataLayer=window.dataLayer||[];
+    if(name==='AddToCart')dataLayer.push({event:'add_to_cart',ecommerce:{currency:'EGP',value:params.value||0,items:[{item_id:params.content_ids&&params.content_ids[0],item_name:params.content_name||'',price:params.value||0,quantity:1}]}});
+    else if(name==='Purchase')dataLayer.push({event:'purchase',ecommerce:{currency:'EGP',value:params.value||0,transaction_id:String(params.order_id||Date.now()),items:params.items||[]}});
+    else if(name==='ViewItem')dataLayer.push({event:'view_item',ecommerce:{currency:'EGP',value:params.price||0,items:[{item_id:params.id,item_name:params.name||'',price:params.price||0}]}});
+    else if(name==='BeginCheckout')dataLayer.push({event:'begin_checkout',ecommerce:{currency:'EGP',value:params.value||0}});
+  }catch(e){}
 }
 const SUPABASE_URL='https://xgokhpdhzafuluiqdtah.supabase.co', SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnb2tocGRoemFmdWx1aXFkdGFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5NjU0NDMsImV4cCI6MjEwNDU0MTQ0M30.2B-0GPvxh5KoXVM4jhN06hCt75LakazSC36bh637zQA';
 const supaOn=()=>SUPABASE_URL&&!SUPABASE_URL.startsWith('__')&&SUPABASE_KEY&&!SUPABASE_KEY.startsWith('__');
@@ -454,6 +462,14 @@ function applyTheme(){
   const og=document.querySelector('meta[property="og:title"]'); if(og&&seo.site_title) og.setAttribute('content',seo.site_title);
   const ogd=document.querySelector('meta[property="og:description"]'); if(ogd&&seo.site_desc) ogd.setAttribute('content',seo.site_desc);
   const ogi=document.querySelector('meta[property="og:image"]'); if(ogi&&seo.og_image) ogi.setAttribute('content',absUrl(seo.og_image));
+  // Google Search Console verification (paste code from dashboard → SEO)
+  try{
+    let gv=document.querySelector('meta[name="google-site-verification"]');
+    if(seo.google_verification){
+      if(!gv){gv=document.createElement('meta');gv.name='google-site-verification';document.head.appendChild(gv);}
+      gv.setAttribute('content',seo.google_verification);
+    }
+  }catch(e){}
   injectItemList();
 }
 function injectItemList(){
@@ -492,6 +508,7 @@ $('#checkoutBtn').onclick = async ()=>{
   const cname=($('#custName')&&$('#custName').value||'').trim();
   const cphone=($('#custPhone')&&$('#custPhone').value||'').trim();
   const useLoy=$('#loyUse')&&$('#loyUse').checked;
+  pxEvent('BeginCheckout',{value:total,currency:'EGP'});
   let orderId=null, finalTotal=total, disc=0, fee=0, tax=0, ld=0;
   if(supaOn()){
     try{
@@ -510,7 +527,7 @@ $('#checkoutBtn').onclick = async ()=>{
   if(cname) txt+='\nName: '+cname;
   if(cphone) txt+='\nPhone: '+cphone;
   window.open((window.VARNOTO_WA||'https://wa.me/201000000000')+'?text='+encodeURIComponent(txt),'_blank');
-  if(orderId){ cart=[]; COUPON=null; const ci=$('#couponIn'); if(ci)ci.value=''; saveCart(); closeCart(); refreshLoyalty(); pxEvent('Purchase',{value:finalTotal,currency:'EGP',num_items:items.reduce((a,i)=>a+i.q,0)}); alert(t('Order #'+orderId+' received! We will call you to confirm.','طلبك #'+orderId+' وصل! هنتصل بيك للتأكيد.')); }
+  if(orderId){ cart=[]; COUPON=null; const ci=$('#couponIn'); if(ci)ci.value=''; saveCart(); closeCart(); refreshLoyalty(); pxEvent('Purchase',{value:finalTotal,currency:'EGP',order_id:orderId,items:items.map(i=>({item_id:i.id,item_name:i.name,price:i.price,quantity:i.q}))}); alert(t('Order #'+orderId+' received! We will call you to confirm.','طلبك #'+orderId+' وصل! هنتصل بيك للتأكيد.')); }
   if(orderId&&PAY==='paymob'){ payOnline(orderId,finalTotal); }
 };
 async function payOnline(orderId,amount){
