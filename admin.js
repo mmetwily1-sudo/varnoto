@@ -5,8 +5,9 @@ function selfTest(){
   const tabs=document.querySelectorAll('.tab').length;
   const panels=document.querySelectorAll('.panel').length;
   const rows=document.querySelectorAll('#prodRows tr').length;
+  const census=[...document.querySelectorAll('.panel')].map(p=>p.id.replace('p','')+':'+(p.querySelectorAll('table,tbody,input,select,textarea,button').length)).join(' ');
   const tag=document.getElementById('buildTag');
-  if(tag) tag.textContent='build '+ADMIN_BUILD+' • tabs:'+tabs+' • panels:'+panels+' • products:'+rows;
+  if(tag){tag.textContent='build '+ADMIN_BUILD+' • tabs:'+tabs+' • panels:'+panels+' • products:'+rows;tag.title=census;}
  }catch(e){}
 }
 try{
